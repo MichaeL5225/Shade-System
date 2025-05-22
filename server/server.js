@@ -54,7 +54,7 @@ app.post('/api/areas/upload', upload.single('image'), (req, res) => {
 
 // קבלת כל האזורים הקיימים
 app.get('/api/areas', (req, res) => {
-  db.query('SELECT * FROM areas', (err, results) => {
+  db.query('SELECT name FROM areas', (err, results) => {
     if (err) return res.status(500).json({ error: err.message });
     res.json(results);
   });
