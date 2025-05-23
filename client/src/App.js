@@ -9,7 +9,7 @@ function App() {
   const [deleteMode, setDeleteMode] = useState(false);
   const [selectedAreas, setSelectedAreas] = useState([]);
   const [newArea, setNewArea] = useState({ name: '', description: '' });
-  const [imageFile, setImageFile] = useState(null);
+  const [pathFile, setPathFile] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => {
@@ -23,20 +23,20 @@ function App() {
 
   const handleAddArea = () => {
     const { name, description } = newArea;
-    if (!name || !description || !imageFile) {
+    if (!name || !description || !pathFile) {
       return alert('חובה למלא את כל השדות ולהעלות תמונה');
     }
 
     const formData = new FormData();
     formData.append('name', name);
     formData.append('description', description);
-    formData.append('image', imageFile);
+    formData.append('path', pathFile);
 
     axios.post('/api/areas/upload', formData)
       .then(res => {
         setAreas([...areas, res.data]);
         setNewArea({ name: '', description: '' });
-        setImageFile(null);
+        setPathFile(null);
         setShowForm(false);
       })
       .catch(err => console.error('שגיאה בשליחה:', err));
@@ -138,7 +138,7 @@ function App() {
           <input
             type="file"
             accept="image/*"
-            onChange={(e) => setImageFile(e.target.files[0])}
+            onChange={(e) => setPathFile(e.target.files[0])}
           />
           <button onClick={handleAddArea}>שלח</button>
         </div>

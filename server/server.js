@@ -16,21 +16,30 @@ app.use(express.json());
 // משרת קבצים סטטיים מתוך תיקיית uploads
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
-// יצירת תיקייה לאחסון קבצים
+// יצירת תיקייה לאחסון קבצים עם שם ברור וקריא
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, 'uploads/'); // שמירת הקובץ בתיקייה uploads
+    cb(null, 'uploads/');
   },
   filename: (req, file, cb) => {
-    const ext = path.extname(file.originalname); // סיומת מקורית של הקובץ
-    cb(null, Date.now() + ext); // יצירת שם חדש על בסיס הזמן
+    const originalName = file.originalname.replace(/\s+/g, '_'); // מחיקת רווחים
+    const now = new Date();
+    const timestamp =
+      now.getFullYear() + '-' +
+      String(now.getMonth() + 1).padStart(2, '0') + '-' +
+      String(now.getDate()).padStart(2, '0') + '_' +
+      String(now.getHours()).padStart(2, '0') + '-' +
+      String(now.getMinutes()).padStart(2, '0') + '-' +
+      String(now.getSeconds()).padStart(2, '0');
+
+    cb(null, `${timestamp}-${originalName}`);
   },
 });
 
 const upload = multer({ storage });
 
 // יצירת אזור חדש עם תמונה
-app.post('/api/areas/upload', upload.single('image'), (req, res) => {
+app.post('/api/areas/upload', upload.single('path'), (req, res) => {
   const { name, description } = req.body;
 
   // בדיקה: חייבים שם, תיאור וקובץ תמונה
@@ -38,23 +47,23 @@ app.post('/api/areas/upload', upload.single('image'), (req, res) => {
     return res.status(400).json({ error: 'חובה למלא שם, תיאור ולהעלות תמונה.' });
   }
 
-  const image = req.file.filename;
+  const filePath = req.file.filename;
 
   db.query(
-    'INSERT INTO areas (name, description, image) VALUES (?, ?, ?)',
-    [name, description, image],
+    'INSERT INTO areas (name, description, path) VALUES (?, ?, ?)',
+    [name, description, filePath],
     (err, result) => {
       if (err) return res.status(500).json({ error: err.message });
 
-      // החזרת הנתונים כולל הנתיב לתמונה
-      res.json({ id: result.insertId, name, description, image });
+      // החזרת הנתונים כולל הנתיב לקובץ
+      res.json({ id: result.insertId, name, description, path: filePath });
     }
   );
 });
 
 // קבלת כל האזורים הקיימים
 app.get('/api/areas', (req, res) => {
-  db.query('SELECT name FROM areas', (err, results) => {
+  db.query('SELECT * FROM areas', (err, results) => {
     if (err) return res.status(500).json({ error: err.message });
     res.json(results);
   });
