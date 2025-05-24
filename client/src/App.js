@@ -1,149 +1,32 @@
-import React, { useState, useEffect } from 'react';
-import axios from 'axios';
-import './App.css';
+// מייבא את הספריות הרגילות של React
+import React from 'react';
+
+// מייבא את הכלים מ־react-router-dom שמאפשרים ניתוב בתוך SPA (Single Page Application)
+import {
+  BrowserRouter as Router, // עוטף את כל האפליקציה ומנהל את ה-URL
+  Routes,                   // רכיב עוטף לכל הראוטים באפליקציה
+  Route                     // מגדיר ראוט (כתובת) אחת ספציפית
+} from 'react-router-dom';
+
+// מייבא את שני הקומפוננטות שתיצור:
+import AreaList from './AreaList';     // הדף הראשי - רשימת האזורים
+import EditArea from './EditArea';     // הדף לעריכת אזור (בעתיד: לפי השם מה-URL)
 
 function App() {
-  const [areas, setAreas] = useState([]);
-  const [showForm, setShowForm] = useState(false);
-  const [open, setOpen] = useState(false);
-  const [deleteMode, setDeleteMode] = useState(false);
-  const [selectedAreas, setSelectedAreas] = useState([]);
-  const [newArea, setNewArea] = useState({ name: '', description: '' });
-  const [pathFile, setPathFile] = useState(null);
-  const [searchTerm, setSearchTerm] = useState('');
-
-  useEffect(() => {
-    axios.get('/api/areas')
-      .then(res => setAreas(res.data))
-      .catch(err => console.error('שגיאה בקבלת אזורים:', err));
-  }, []);
-
-  const toggleForm = () => setShowForm(!showForm);
-  const toggleDropDown = () => setOpen(!open);
-
-  const handleAddArea = () => {
-    const { name, description } = newArea;
-    if (!name || !description || !pathFile) {
-      return alert('חובה למלא את כל השדות ולהעלות תמונה');
-    }
-
-    const formData = new FormData();
-    formData.append('name', name);
-    formData.append('description', description);
-    formData.append('path', pathFile);
-
-    axios.post('/api/areas/upload', formData)
-      .then(res => {
-        setAreas([...areas, res.data]);
-        setNewArea({ name: '', description: '' });
-        setPathFile(null);
-        setShowForm(false);
-      })
-      .catch(err => console.error('שגיאה בשליחה:', err));
-  };
-
-  const toggleSelectArea = (name) => {
-    setSelectedAreas(prev =>
-      prev.includes(name)
-        ? prev.filter(n => n !== name)
-        : [...prev, name]
-    );
-  };
-
-  const handleDeleteSelected = () => {
-    Promise.all(
-      selectedAreas.map(name =>
-        axios.delete(`/api/areas/name/${encodeURIComponent(name)}`)
-      )
-    ).then(() => {
-      setAreas(areas.filter(area => !selectedAreas.includes(area.name)));
-      setSelectedAreas([]);
-      setDeleteMode(false);
-    }).catch(err => console.error('שגיאה במחיקה:', err));
-  };
-
-  // ✅ מסנן את הרשימה לפי מה שכתוב בשדה החיפוש
-  const filteredAreas = areas.filter(area =>
-    area.name.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
   return (
-    <div className="App">
-      <h2>ברוך הבא ל-Shade System</h2>
+    // עוטף את כל האפליקציה כדי ש-router-dom יוכל לעקוב אחרי ה-URL בדפדפן
+    <Router>
+      {/* Routes מגדיר את כל הכתובות שאפשר להגיע אליהן */}
+      <Routes>
 
-      <div className="button-bar">
-        <button className="btn" onClick={toggleForm}>Add New Area</button>
+        {/* Route שמפנה לדף הראשי – כאן נציג את רשימת האזורים */}
+        <Route path="/" element={<AreaList />} />
 
-        <div className="dropdown">
-          <button className="dropbtn" onClick={toggleDropDown}>Areas</button>
-          {open && (
-            <div className="dropdown-content">
-              
-              {/* שדה חיפוש */}
-              <input
-                type="text"
-                placeholder="Search..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="search-bar"
-              />
+        {/* Route דינאמי – עובר לעמוד עריכה לפי שם האזור (מופיע בפרמטר name) */}
+        <Route path="/edit/:name" element={<EditArea />} />
 
-              {/* הצגת רק האזורים שמכילים את מונח החיפוש */}
-              {filteredAreas.map((area, index) => (
-                <div key={index} className="area-item">
-                  {deleteMode && (
-                    <input
-                      type="checkbox"
-                      checked={selectedAreas.includes(area.name)}
-                      onChange={() => toggleSelectArea(area.name)}
-                    />
-                  )}
-                  <strong>{area.name}</strong>
-                </div>
-              ))}
-
-              {/* כפתור מחיקה כללית */}
-              <button className="btn" onClick={() => {
-                setDeleteMode(!deleteMode);
-                setSelectedAreas([]);
-              }}>
-                {deleteMode ? "❌" : "🗑 Delete"}
-              </button>
-
-              {/* כפתור מחיקת האזורים שנבחרו */}
-              {deleteMode && selectedAreas.length > 0 && (
-                <button className="btn delete" onClick={handleDeleteSelected}>
-                  🗑({selectedAreas.length})
-                </button>
-              )}
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* טופס הוספה */}
-      {showForm && (
-        <div className="form-container">
-          <input
-            type="text"
-            placeholder="שם האזור"
-            value={newArea.name}
-            onChange={(e) => setNewArea({ ...newArea, name: e.target.value })}
-          />
-          <textarea
-            placeholder="תיאור האזור"
-            value={newArea.description}
-            onChange={(e) => setNewArea({ ...newArea, description: e.target.value })}
-          />
-          <input
-            type="file"
-            accept="image/*"
-            onChange={(e) => setPathFile(e.target.files[0])}
-          />
-          <button onClick={handleAddArea}>שלח</button>
-        </div>
-      )}
-    </div>
+      </Routes>
+    </Router>
   );
 }
 

@@ -1,3 +1,6 @@
+.body{
+  font-family:'Times New Roman', Times, serif
+}
 .App {
   text-align: center;
   direction: rtl;
@@ -52,6 +55,9 @@ h2 {
   border: none;
   border-radius: 6px;
   cursor: pointer;
+}
+.dropbtn:hover {
+  background-color: #246f27;
 }
 
 /* תיבת הדרופדאון */
