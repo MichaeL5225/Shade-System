@@ -1,0 +1,64 @@
+.edit-area {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.area-header {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  padding: 0.8em;
+  background-color: #f4f4f4;
+  border-bottom: 1px solid #ccc;
+  flex-wrap: wrap;
+}
+
+.area-header h2, .area-header p {
+  margin: 0.2em 0;
+}
+
+.shade-form {
+  background-color: #e8f4ff;
+  padding: 10px;
+  text-align: center;
+}
+
+.shade-form input {
+  margin: 4px;
+  padding: 6px;
+  width: 120px;
+}
+
+.shade-form button {
+  margin-top: 10px;
+  padding: 6px 12px;
+}
+
+.map {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: auto;
+  max-width: 100%;
+  flex: 1;
+}
+
+.map-image {
+  width: 850px;
+  height: auto;
+  object-fit: contain;
+  display: block;
+}
+
+.shade-icon {
+  position: absolute;
+  font-size: 22px;
+  background-color: rgba(255,255,255,0.7);
+  border: 1px dashed #000;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: grab;
+}
