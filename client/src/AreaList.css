@@ -24,8 +24,9 @@ h2 {
 
 /* כפתורים כלליים */
 .btn {
+  
   color: blue;
-  background-color: white;
+  background-color: rgb(255, 255, 255);
   border: 1px solid blue;
   border-radius: 6px;
   padding: 8px 16px;
@@ -36,6 +37,7 @@ h2 {
 .btn:hover {
   background-color: blue;
   color: white;
+  transform: scale(1.05);  
 }
 .btn.delete {
   border-color: red;
@@ -48,8 +50,8 @@ h2 {
 
 /* כפתור דרופדאון */
 .dropbtn {
-  background-color: #4CAF50;
-  color: white;
+  background-color: #ffffff;
+  color: blue;
   padding: 10px 20px;
   font-size: 16px;
   border: none;
@@ -57,7 +59,8 @@ h2 {
   cursor: pointer;
 }
 .dropbtn:hover {
-  background-color: #246f27;
+  background-color: blue;
+  color: white;
 }
 
 /* תיבת הדרופדאון */
@@ -123,3 +126,4 @@ h2 {
   border: 1px solid #ccc;
   border-radius: 5px;
 }
+
