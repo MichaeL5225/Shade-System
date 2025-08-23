@@ -23,6 +23,40 @@ const storage = multer.diskStorage({
 });
 const upload = multer({ storage });
 
+app.post('/api/login', (req, res) => {
+const { username, password } = req.body;
+if(!username || !password) {
+return res.status(400).json({error:"Username and password are required"});
+}
+const sql = 'SELECT * FROM users WHERE username = ? AND password = ?';
+db.query(sql,[username,password],(err,results)=>{
+  if(err) return res.status(500).json({error:"Error in Database"});
+if(results.length>0){
+  res.json({success:true,message:"Login successful"});
+}
+else{
+  res.status(401).json({success:false,error:"Invalid credentials"});
+}
+});
+});
+app.post("/api/register", (req, res) => {
+  const { username, password } = req.body;
+  if (!username || !password) return res.status(400).json({ error: "חובה למלא שם וסיסמה" });
+
+  const checkSql = "SELECT * FROM users WHERE username = ?";
+  db.query(checkSql, [username], (err, results) => {
+    if (err) return res.status(500).json({ error: "שגיאה במסד הנתונים" });
+    if (results.length > 0) return res.json({ success: false, error: "שם המשתמש כבר קיים" });
+
+    const insertSql = "INSERT INTO users (username, password) VALUES (?, ?)";
+    db.query(insertSql, [username, password], (err, result) => {
+      if (err) return res.status(500).json({ error: "שגיאה בהוספת המשתמש" });
+      res.json({ success: true });
+    });
+  });
+});
+
+
 // ================= אזורים =================
 
 app.post('/api/areas/upload', upload.single('path'), (req, res) => {

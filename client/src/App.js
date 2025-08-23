@@ -11,6 +11,7 @@ import {
 // מייבא את שני הקומפוננטות שתיצור:
 import AreaList from './AreaList';     // הדף הראשי - רשימת האזורים
 import EditArea from './EditArea';     // הדף לעריכת אזור (בעתיד: לפי השם מה-URL)
+import Login from './Login';
 
 function App() {
   return (
@@ -19,8 +20,11 @@ function App() {
       {/* Routes מגדיר את כל הכתובות שאפשר להגיע אליהן */}
       <Routes>
 
+         {/* עמוד ההתחברות יהיה הראשון */}
+        <Route path="/" element={<Login />} />
+
         {/* Route שמפנה לדף הראשי – כאן נציג את רשימת האזורים */}
-        <Route path="/" element={<AreaList />} />
+        <Route path="/areaList" element={<AreaList />} />
 
         {/* Route דינאמי – עובר לעמוד עריכה לפי שם האזור (מופיע בפרמטר name) */}
         <Route path="/edit/:name" element={<EditArea />} />
