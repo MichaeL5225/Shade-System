@@ -1,6 +1,13 @@
-.body{
-  font-family:'Times New Roman', Times, serif
+html, body {
+  height: 100%;
+  margin: 0;
+  overflow: hidden; /* מונע גלילה */
 }
+
+body {
+  font-family: 'Times New Roman', Times, serif;
+}
+
 .App {
   text-align: center;
   direction: rtl;
@@ -25,7 +32,7 @@ h2 {
 /* כפתורים כלליים */
 .btn {
   color: blue;
-  background-color: white;
+  background-color: #ffffff;
   border: 1px solid blue;
   border-radius: 6px;
   padding: 8px 16px;
@@ -36,6 +43,7 @@ h2 {
 .btn:hover {
   background-color: blue;
   color: white;
+  transform: scale(1.05);
 }
 .btn.delete {
   border-color: red;
@@ -48,8 +56,8 @@ h2 {
 
 /* כפתור דרופדאון */
 .dropbtn {
-  background-color: #4CAF50;
-  color: white;
+  background-color: #ffffff;
+  color: blue;
   padding: 10px 20px;
   font-size: 16px;
   border: none;
@@ -57,7 +65,8 @@ h2 {
   cursor: pointer;
 }
 .dropbtn:hover {
-  background-color: #246f27;
+  background-color: blue;
+  color: white;
 }
 
 /* תיבת הדרופדאון */
@@ -82,7 +91,6 @@ h2 {
   text-align: left;
   direction: ltr;
 }
-
 .area-item {
   padding: 8px 0;
   border-bottom: 1px solid #ddd;

@@ -80,7 +80,6 @@ function EditArea() {
       alert("✔️ הצללה נשמרה בהצלחה");
       setIsAdding(false);
 
-      // רענון הצללות
       const updated = await axios.get(`/api/shades/${encodeURIComponent(name)}`);
       setShades(updated.data);
     } catch (err) {
@@ -94,23 +93,36 @@ function EditArea() {
       <header className="area-header">
         {editMode ? (
           <>
-            <input value={areaData.name} onChange={e => setAreaData({ ...areaData, name: e.target.value })} />
-            <textarea value={areaData.description} onChange={e => setAreaData({ ...areaData, description: e.target.value })} />
-            <button onClick={async () => {
-              await axios.put(`/api/areas/name/${encodeURIComponent(name)}`, areaData);
-              setEditMode(false);
-            }}>💾 שמור</button>
+            <label>
+              שם האזור: 
+              <input value={areaData.name} onChange={e => setAreaData({ ...areaData, name: e.target.value })} />
+            </label>
+            <label>
+              תיאור אזור: 
+              <textarea value={areaData.description} onChange={e => setAreaData({ ...areaData, description: e.target.value })} />
+            </label>
+            <div className="button-group">
+              <button className="button" onClick={async () => {
+                await axios.put(`/api/areas/name/${encodeURIComponent(name)}`, areaData);
+                setEditMode(false);
+              }}>💾 שמור</button>
+            </div>
           </>
         ) : (
           <>
-            <h2>{areaData.name}</h2>
-            <p>{areaData.description}</p>
-            <button onClick={() => setEditMode(true)}>⚙️ ערוך אזור</button>
+           <div className="area-info">
+      <h2>שם האזור: {areaData.name}</h2>
+      <p>תיאור אזור: {areaData.description}</p>
+    </div>
+
+    <div className="button-group">
+      <button className="button" onClick={() => setEditMode(true)}>⚙️ ערוך אזור</button>
+      <button className="button" onClick={handleToggleAdd}>
+        {isAdding ? '❌ בטל הצללה' : '➕ הוסף הצללה'}
+      </button>
+    </div>
           </>
         )}
-        <button onClick={handleToggleAdd}>
-          {isAdding ? '❌ בטל הצללה' : '➕ הוסף הצללה'}
-        </button>
       </header>
 
       {isAdding && (
@@ -151,7 +163,7 @@ function EditArea() {
             value={newShade.height}
             onChange={(e) => setNewShade({ ...newShade, height: parseInt(e.target.value) })}
           />
-          <button onClick={handleSaveShade}>💾 שמור הצללה</button>
+          <button className="button" onClick={handleSaveShade}>💾 שמור הצללה</button>
         </div>
       )}
 
@@ -160,7 +172,6 @@ function EditArea() {
           <img src={`/uploads/${areaData.path}`} alt="Map" className="map-image" />
         ) : <p>🗺 כאן תופיע המפה שלך</p>}
 
-        {/* הצללות קיימות */}
         {shades.map((shade, i) => (
           <div
             key={i}
@@ -176,7 +187,6 @@ function EditArea() {
           </div>
         ))}
 
-        {/* הצללה חדשה */}
         {isAdding && newShade.x !== null && newShade.y !== null && (
           <div
             className="shade-icon"
