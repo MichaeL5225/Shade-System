@@ -31,8 +31,9 @@ h2 {
 
 /* כפתורים כלליים */
 .btn {
+  
   color: blue;
-  background-color: #ffffff;
+  background-color: rgb(255, 255, 255);
   border: 1px solid blue;
   border-radius: 6px;
   padding: 8px 16px;
@@ -43,7 +44,7 @@ h2 {
 .btn:hover {
   background-color: blue;
   color: white;
-  transform: scale(1.05);
+  transform: scale(1.05);  
 }
 .btn.delete {
   border-color: red;
@@ -131,3 +132,4 @@ h2 {
   border: 1px solid #ccc;
   border-radius: 5px;
 }
+
