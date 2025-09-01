@@ -8,13 +8,18 @@ const db = require('./db'); // Pool של MySQL2
 const app = express();
 const PORT = 5000;
 
+const UPLOADS_DIR = path.join(__dirname, 'uploads');
+if (!fs.existsSync(UPLOADS_DIR)) {
+  fs.mkdirSync(UPLOADS_DIR, { recursive: true });
+}
+
 app.use(cors());
 app.use(express.json());
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+app.use('/uploads', express.static(UPLOADS_DIR));
 
 // ================= אחסון קבצים =================
 const storage = multer.diskStorage({
-  destination: (req, file, cb) => cb(null, 'uploads/'),
+  destination: (req, file, cb) => cb(null, UPLOADS_DIR), 
   filename: (req, file, cb) => {
     const name = file.originalname.replace(/\s+/g, '_');
     const time = new Date().toISOString().replace(/[:.]/g, '-');
@@ -72,6 +77,7 @@ app.post('/api/areas/upload', upload.single('path'), async (req, res) => {
     );
     res.json({ id: result.insertId, name, description, path: filePath });
   } catch (err) {
+    console.error('Upload error:', err); // יופיע בטרמינל
     res.status(500).json({ error: err.message });
   }
 });

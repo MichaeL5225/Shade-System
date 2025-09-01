@@ -83,7 +83,6 @@ function Login() {
   return (
     <div style={backgroundStyle}>
       <div className="login-container">
-        {errorMessage && <div className="error-message">{errorMessage}</div>}
         <h2>התחברות</h2>
         <form onSubmit={handleLogin}>
           <input
@@ -98,6 +97,7 @@ function Login() {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
           />
+          {errorMessage && <div className="error-message">{errorMessage}</div>}
           <button type="submit">התחבר</button>
         </form>
 

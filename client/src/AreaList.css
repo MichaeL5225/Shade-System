@@ -9,31 +9,96 @@ body {
 }
 
 .App {
-  text-align: center;
-  direction: rtl;
-  background-color: #282c34;
-  min-height: 100vh;
-  padding-top: 40px;
-  color: white;
-  font-family: sans-serif;
-}
-
-h2 {
-  margin-bottom: 30px;
-}
-
-.button-bar {
   display: flex;
-  gap: 15px;
   justify-content: center;
-  margin-bottom: 20px;
+  align-items: center;
+  min-height: 100vh;           
+  direction: rtl;
 }
 
-/* כפתורים כלליים */
+/* שכבת כהות קלילה על הרקע */
+.App::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.08); 
+  pointer-events: none;
+}
+
+/* === HERO (עמוד הבית) === */
+.hero {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 24px;
+}
+
+.hero-card {
+  width: min(92vw, 720px);
+  padding: 28px 32px;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.88);  
+  backdrop-filter: blur(6px);
+  box-shadow: 0 12px 36px rgba(0,0,0,.18);
+  text-align: center;
+}
+
+.hero-title {
+  margin: 0 0 4px;
+  font-weight: 800;
+  font-size: 32px;
+}
+.hero-subtitle {
+  margin: 0 0 20px;
+  font-size: 16px;
+  color: #475569;
+}
+
+.hero-actions {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 16px;                     
+  flex-wrap: wrap;
+}
+
+/* כפתורי CTA גדולים */
+.btn-hero {
+  min-width: 220px;
+  height: 56px;
+  padding: 0 20px;
+  border: 0;
+  border-radius: 14px;
+  font-size: 20px;
+  font-weight: 800;
+  color: #fff;
+  cursor: pointer;
+  box-shadow: 0 10px 24px rgba(0,0,0,.12);
+  transition: transform .08s ease, filter .2s ease, box-shadow .2s ease;
+}
+.btn-hero:active { transform: translateY(1px); }
+
+.btn-primary {
+  background: linear-gradient(135deg, #ff7a00 0%, #ff3d71 100%);
+}
+.btn-primary:hover {
+  filter: brightness(1.05);
+  box-shadow: 0 12px 28px rgba(255, 61, 113, .35);
+}
+
+.btn-secondary {
+  background: linear-gradient(135deg, #ff9a3d 0%, #ff5c7a 100%);
+}
+.btn-secondary:hover {
+  filter: brightness(1.05);
+  box-shadow: 0 12px 28px rgba(255, 92, 122, .35);
+}
+
+/* כפתורים כלליים קטנים (למשימות בתוך ה-dropdown) */
 .btn {
-  
   color: blue;
-  background-color: rgb(255, 255, 255);
+  background-color: #fff;
   border: 1px solid blue;
   border-radius: 6px;
   padding: 8px 16px;
@@ -46,90 +111,214 @@ h2 {
   color: white;
   transform: scale(1.05);  
 }
+
+/* וריאציה קטנה ונוחה */
+.btn.small {
+  height: 38px;
+  min-width: 0;
+  padding: 0 12px;
+  font-size: 14px;
+  border-radius: 8px;
+  background: #f8fafc;
+  color: #0f172a;
+  border: 1px solid #e2e8f0;
+}
+
+/* כפתור מחיקה – גרסה מאוחדת (אל תמקמי גם גרסה אחרת למעלה) */
 .btn.delete {
-  border-color: red;
-  color: red;
+  background: #fee2e2;
+  color: #991b1b;
+  border:1px solid #fecaca;
 }
+
 .btn.delete:hover {
-  background-color: red;
-  color: white;
+  background: #ef4444;
+  color: #fff;
+  border-color: #ef4444;
 }
 
-/* כפתור דרופדאון */
-.dropbtn {
-  background-color: #ffffff;
-  color: blue;
-  padding: 10px 20px;
-  font-size: 16px;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-}
-.dropbtn:hover {
-  background-color: blue;
-  color: white;
-}
-
-/* תיבת הדרופדאון */
+/* תיבת ה־Dropdown של "אזורים" */
 .dropdown {
   position: relative;
-  display: inline-block;
+   display: inline-block;
 }
 
-.dropdown-content {
+.dropdown .dropdown-content {
   position: absolute;
-  top: 50px;
-  right: 0;
-  background-color: #f9f9f9;
-  color: black;
-  width: 300px;
-  max-height: 350px;
-  overflow-y: auto;
-  padding: 15px;
-  box-shadow: 0px 8px 16px rgba(0,0,0,0.3);
-  border-radius: 8px;
+  top: calc(100% + 10px);
+  right: 0;                       
+  width: min(86vw, 340px);
+  max-height: 60vh;
+  overflow: auto;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 12px;
+  box-shadow: 0 14px 34px rgba(0,0,0,.18);
+  text-align: right;
   z-index: 10;
-  text-align: left;
-  direction: ltr;
 }
-.area-item {
-  padding: 8px 0;
-  border-bottom: 1px solid #ddd;
+
+/* חיפוש ופריטים בתוך ה-dropdown */
+.dropdown .search-bar {
+  width: 100%;
+  height: 44px;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 0 12px;
+  margin-bottom: 10px;
+  font-size: 14px;
+}
+.dropdown .area-item {
+  padding: 8px 6px;
+  border-radius: 8px;
   display: flex;
   align-items: center;
   gap: 8px;
 }
+.dropdown .area-item:hover {
+  background: #f1f5f9;
+}
 
-/* טופס */
+/* טופס הוספת אזור */
 .form-container {
-  margin-top: 20px;
+  width: min(92vw, 760px);
+  margin: 0 auto;
+  background: rgba(255,255,255,0.92);
+  border-radius: 16px;
+  padding: 22px 26px;
+  box-shadow: 0 12px 36px rgba(0,0,0,0.18);
   display: flex;
   flex-direction: column;
+  gap: 12px;
+}
+
+.form-title {
+  margin: 0 0 8px;
+  text-align: center;
+  font-weight: 800;
+  font-size: 28px;
+}
+
+.form-body {
+  display: flex;
+  flex-direction: column;
+  align-items:center;  
   gap: 10px;
-  width: 300px;
-  margin-inline: auto;
 }
 
 .form-container input,
 .form-container textarea {
-  padding: 10px;
-  font-size: 16px;
   width: 100%;
-  border: 1px solid #ccc;
-  border-radius: 5px;
+  padding: 12px;
+  font-size: 16px;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  background: #fff;
 }
 
 .form-container textarea {
-  height: 80px;
+  height: 110px;
   resize: none;
 }
 
-.search-bar {
-  width: 90%;
-  padding: 8px;
-  margin-bottom: 10px;
-  font-size: 14px;
-  border: 1px solid #ccc;
-  border-radius: 5px;
+.form-body input[type="text"],
+.form-body textarea{
+  width:100%;
+  max-width:540px;             
+  margin:0 auto;              
+  padding:12px;
+  font-size:16px;
+  border:1px solid #e2e8f0;
+  border-radius:10px;
+  background:#fff;
 }
+.form-body textarea{
+  height:110px;
+  resize:none;
+}
+
+.form-body input[type="file"]{
+  width:auto;                  
+  align-self:center;           
+}
+
+.form-actions {
+  margin-top: 8px;
+  display: flex;
+  justify-content: space-between;  
+  align-items: center;
+  direction: rtl;                  
+}
+
+.back-btn {
+  min-width: 120px;
+  height: 44px;
+  background: #f8fafc;
+  color: #0f172a;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+}
+.back-btn:hover { background: #e2e8f0; }
+
+.submit-btn {
+  min-width: 120px;
+  height: 44px;
+  background: #1d4ed8;  
+  color: #fff;
+  border: none;          
+  border-radius: 10px;
+  font-weight: 700;
+}
+.submit-btn:hover { filter: brightness(1.05); }
+
+.file-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  max-width: 540px;         
+  margin: 0 auto;           
+  padding: 8px 12px;
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  direction: rtl;           
+}
+
+.file-row input[type="file"] {
+  flex: 1 1 auto;           
+}
+
+.trash-btn {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  line-height: 1;
+  background: #fee2e2;
+  color: #991b1b;
+  border: 1px solid #fecaca;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+.trash-btn:hover {
+  background: #ef4444;
+  color: #fff;
+  border-color: #ef4444;
+}
+
+.image-preview{
+  display:block;
+  margin:10px auto 0;
+  width:min(100%, 280px);
+  height:160px;
+  object-fit:cover;
+  border-radius:10px;
+  box-shadow:0 6px 18px rgba(0,0,0,.12);
+}
+
 

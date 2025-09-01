@@ -1,7 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import { Link } from 'react-router-dom';
 import './AreaList.css';
+axios.defaults.baseURL = 'http://localhost:5000';
+
 
 function AreaList() {
   const [areas, setAreas] = useState([]);
@@ -12,12 +14,22 @@ function AreaList() {
   const [newArea, setNewArea] = useState({ name: '', description: '' });
   const [pathFile, setPathFile] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const [preview, setPreview] = useState(null);
+  const fileInputRef = useRef(null);
+
 
   useEffect(() => {
     axios.get('/api/areas')
       .then(res => setAreas(res.data))
       .catch(err => console.error('שגיאה בקבלת אזורים:', err));
   }, []);
+
+  useEffect(() => {
+  return () => {
+    if (preview) URL.revokeObjectURL(preview);
+  };
+}, [preview]);
+
 
   const toggleForm = () => { setShowForm(!showForm); setOpen(false); };
   const toggleDropDown = () => { setOpen(!open); setShowForm(false); };
@@ -32,8 +44,22 @@ function AreaList() {
     formData.append('path', pathFile);
 
     axios.post('/api/areas/upload', formData)
-      .then(res => { setAreas([...areas, res.data]); setNewArea({ name: '', description: '' }); setPathFile(null); setShowForm(false); })
-      .catch(err => console.error('שגיאה בשליחה:', err));
+      .then(res => {
+        setAreas([...areas, res.data]);
+        setNewArea({ name: '', description: '' });
+        setPathFile(null);
+       
+        if (preview) URL.revokeObjectURL(preview);
+        setPreview(null);
+
+        setShowForm(false);
+      })
+
+      .catch(err => {
+        const msg = err.response?.data?.error || err.message;
+        console.error('שגיאה בשליחה:', msg);
+        alert(`שגיאה בשמירה: ${msg}`);
+      });
   };
 
   const toggleSelectArea = (name) => {
@@ -48,6 +74,22 @@ function AreaList() {
 
   const filteredAreas = areas.filter(area => area.name.toLowerCase().includes(searchTerm.toLowerCase()));
 
+  const handleFileChange = (e) => {
+    const file = e.target.files?.[0] || null;
+
+    if (preview) {
+      URL.revokeObjectURL(preview);
+      setPreview(null);
+    }
+
+    setPathFile(file);
+    if (file) {
+      const url = URL.createObjectURL(file);
+      setPreview(url);
+    }
+  };
+
+
   return (
     <div
       className="App"
@@ -58,44 +100,129 @@ function AreaList() {
         minHeight: "100vh"
       }}
     >
-    
+      
+    {!showForm && (
+      <section className="hero">
+      <div className="hero-card">
+        <h1 className="hero-title">ניהול אזורי קמפוס</h1>
+        <p className="hero-subtitle">בחיר/י פעולה: הוספת אזור חדש או צפייה באזורים קיימים</p>
 
-      <div className="button-bar">
-        <button className="btn" onClick={toggleForm}>הוספת איזור</button>
+        <div className="hero-actions">
+          <div className="dropdown">
+            <button className="btn-hero btn-secondary" onClick={toggleDropDown}>
+              אזורים
+            </button>
 
-        <div className="dropdown">
-          <button className="dropbtn" onClick={toggleDropDown}>איזורים</button>
-          {open && (
-            <div className="dropdown-content">
-              <input
-                type="text"
-                placeholder="Search..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="search-bar"
-              />
-              {filteredAreas.map((area, index) => (
-                <div key={index} className="area-item">
-                  {deleteMode && <input type="checkbox" checked={selectedAreas.includes(area.name)} onChange={() => toggleSelectArea(area.name)} />}
-                  <Link to={`/edit/${encodeURIComponent(area.name)}`}><strong>{area.name}</strong></Link>
-                </div>
-              ))}
-
-              <button className="btn" style={{ marginTop: "4px" }} onClick={() => { setDeleteMode(!deleteMode); setSelectedAreas([]); }}>
+            {open && (
+              <div className="dropdown-content">
+                <input
+                  type="text"
+                  placeholder="חיפוש..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="search-bar"
+                />
+                {filteredAreas.map((area, index) => (
+                  <div key={index} className="area-item">
+                    {deleteMode && (
+                      <input
+                        type="checkbox"
+                        checked={selectedAreas.includes(area.name)}
+                        onChange={() => toggleSelectArea(area.name)}
+                      />
+                    )}
+                    <Link to={`/edit/${encodeURIComponent(area.name)}`}>
+                      <strong>{area.name}</strong>
+                    </Link>
+                  </div>
+                ))}
+                <button
+                  className="btn small"
+                  style={{ marginTop: 4 }}
+                  onClick={() => { setDeleteMode(!deleteMode); setSelectedAreas([]); }}
+                >
                 {deleteMode ? "❌" : "🗑 מחיקה"}
-              </button>
-              {deleteMode && selectedAreas.length > 0 && <button className="btn delete" onClick={handleDeleteSelected}>🗑({selectedAreas.length})</button>}
-            </div>
-          )}
+                </button>
+                {deleteMode && selectedAreas.length > 0 && (
+                  <button className="btn delete small" onClick={handleDeleteSelected}>
+                    🗑 ({selectedAreas.length})
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
+
+          <button className="btn-hero btn-primary" onClick={toggleForm}>
+            הוספת אזור
+          </button>
         </div>
       </div>
+    </section>
+  )}
+
+
 
       {showForm && (
         <div className="form-container">
-          <input type="text" placeholder="שם האזור" value={newArea.name} onChange={(e) => setNewArea({ ...newArea, name: e.target.value })} />
-          <textarea placeholder="תיאור האזור" value={newArea.description} onChange={(e) => setNewArea({ ...newArea, description: e.target.value })} />
-          <input type="file" accept="image/*" onChange={(e) => setPathFile(e.target.files[0])} />
-          <button onClick={handleAddArea}>הוספת איזור</button>
+
+          <h2 className="form-title">הוספת איזור</h2> 
+
+          <div className="form-body">
+            <input 
+              type="text" 
+              placeholder="שם האזור" 
+              value={newArea.name} 
+              onChange={(e) => setNewArea({ ...newArea, name: e.target.value })} 
+            />
+            <textarea 
+              placeholder="תיאור האזור" 
+              value={newArea.description} 
+              onChange={(e) => setNewArea({ ...newArea, description: e.target.value })} 
+            />
+            <input 
+              ref={fileInputRef}
+              type="file" 
+              accept="image/*" 
+              onChange={handleFileChange}
+            />
+
+            {pathFile && (
+              <button
+                type="button"
+                className="trash-btn"  
+                title="מחיקת תמונה"
+                onClick={() => {
+                  if (preview) URL.revokeObjectURL(preview);
+                  setPreview(null);
+                  setPathFile(null);
+                  if (fileInputRef.current) fileInputRef.current.value = '';
+                }}         
+              >
+                🗑
+              </button>
+            )}
+          </div>
+
+          {preview && (
+            <img src={preview} alt="תצוגה מקדימה" className="image-preview" />
+          )}
+          
+          
+          <div className="form-actions">
+            <button
+              className="btn back-btn"
+              onClick={() => setShowForm(false)}
+            >
+              ← חזרה
+            </button>
+            
+            <button
+              className="btn submit-btn" 
+              onClick={handleAddArea}
+            >
+              הוסף
+            </button>
+          </div>
         </div>
       )}
     </div>
