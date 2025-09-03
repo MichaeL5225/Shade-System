@@ -108,11 +108,14 @@
 }
 
 .register-content input {
+  width: 100%;
+  padding: 10px;  
   margin: 5px 0;
   padding: 8px;
-  border-radius: 6px;
-  border: 1px solid #ccc;
-  font-size: 14px;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+  font-size: 15px;
+  margin-bottom: 10px;
 }
 
 .register-content button {

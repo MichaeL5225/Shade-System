@@ -6,9 +6,9 @@ axios.defaults.baseURL = 'http://localhost:5000';
 
 
 function AreaList() {
+  const [username, setUsername] = useState('');
   const [areas, setAreas] = useState([]);
   const [showForm, setShowForm] = useState(false);
-  const [open, setOpen] = useState(false);
   const [deleteMode, setDeleteMode] = useState(false);
   const [selectedAreas, setSelectedAreas] = useState([]);
   const [newArea, setNewArea] = useState({ name: '', description: '' });
@@ -17,6 +17,9 @@ function AreaList() {
   const [preview, setPreview] = useState(null);
   const fileInputRef = useRef(null);
 
+  useEffect(() => {
+    setUsername(localStorage.getItem('shade_username') || '');
+  }, []);
 
   useEffect(() => {
     axios.get('/api/areas')
@@ -31,8 +34,7 @@ function AreaList() {
 }, [preview]);
 
 
-  const toggleForm = () => { setShowForm(!showForm); setOpen(false); };
-  const toggleDropDown = () => { setOpen(!open); setShowForm(false); };
+  const toggleForm = () => { setShowForm(!showForm); };
 
   const handleAddArea = () => {
     const { name, description } = newArea;
@@ -62,14 +64,22 @@ function AreaList() {
       });
   };
 
-  const toggleSelectArea = (name) => {
-    setSelectedAreas(prev => prev.includes(name) ? prev.filter(n => n !== name) : [...prev, name]);
-  };
-
   const handleDeleteSelected = () => {
     Promise.all(selectedAreas.map(name => axios.delete(`/api/areas/name/${encodeURIComponent(name)}`)))
       .then(() => { setAreas(areas.filter(area => !selectedAreas.includes(area.name))); setSelectedAreas([]); setDeleteMode(false); })
       .catch(err => console.error('שגיאה במחיקה:', err));
+  };
+
+  const handleDeleteSingle = async (name) => {
+    const ok = window.confirm(`האם את/ה בטוח/ה שברצונך למחוק את האזור "${name}"?`);
+    if (!ok) return;
+    try {
+      await axios.delete(`/api/areas/name/${encodeURIComponent(name)}`);
+      setAreas(prev => prev.filter(a => a.name !== name));
+    } catch (err) {
+      console.error('שגיאה במחיקה:', err);
+      alert('מחיקה נכשלה. נסה/י שוב.');
+    }
   };
 
   const filteredAreas = areas.filter(area => area.name.toLowerCase().includes(searchTerm.toLowerCase()));
@@ -100,58 +110,61 @@ function AreaList() {
         minHeight: "100vh"
       }}
     >
+
+      <div className="welcome-strip">
+        <div className="welcome-inner">
+          ברוך הבא{username ? `, ${username}` : ''} 
+        </div>
+      </div>
       
     {!showForm && (
       <section className="hero">
       <div className="hero-card">
         <h1 className="hero-title">ניהול אזורי קמפוס</h1>
-        <p className="hero-subtitle">בחיר/י פעולה: הוספת אזור חדש או צפייה באזורים קיימים</p>
 
         <div className="hero-actions">
-          <div className="dropdown">
-            <button className="btn-hero btn-secondary" onClick={toggleDropDown}>
-              אזורים
-            </button>
+          <div className="areas-panel">
+            <input
+              type="text"
+              placeholder="חיפוש..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="search-bar"
+            />
 
-            {open && (
-              <div className="dropdown-content">
-                <input
-                  type="text"
-                  placeholder="חיפוש..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="search-bar"
-                />
-                {filteredAreas.map((area, index) => (
-                  <div key={index} className="area-item">
-                    {deleteMode && (
-                      <input
-                        type="checkbox"
-                        checked={selectedAreas.includes(area.name)}
-                        onChange={() => toggleSelectArea(area.name)}
-                      />
-                    )}
-                    <Link to={`/edit/${encodeURIComponent(area.name)}`}>
-                      <strong>{area.name}</strong>
-                    </Link>
-                  </div>
-                ))}
-                <button
-                  className="btn small"
-                  style={{ marginTop: 4 }}
-                  onClick={() => { setDeleteMode(!deleteMode); setSelectedAreas([]); }}
-                >
-                {deleteMode ? "❌" : "🗑 מחיקה"}
-                </button>
-                {deleteMode && selectedAreas.length > 0 && (
-                  <button className="btn delete small" onClick={handleDeleteSelected}>
-                    🗑 ({selectedAreas.length})
+            {filteredAreas.length === 0 ? (
+              <div className="empty-state">
+                {searchTerm ? "לא נמצאו אזורים" : "לא נוספו אזורים"}
+              </div>
+            ) : (
+              filteredAreas.map((area, index) => (
+                <div key={index} className="area-item">
+                  <Link to={`/edit/${encodeURIComponent(area.name)}`}>
+                    <strong>{area.name}</strong>
+                  </Link>
+                  <button
+                    type="button"
+                    className="trash-icon-btn"
+                    title={`מחיקת האזור "${area.name}"`}
+                    aria-label={`מחיקת האזור ${area.name}`}
+                    onClick={() => handleDeleteSingle(area.name)}
+                  >
+                    🗑
                   </button>
-                )}
+                </div>
+              ))
+            )}
+
+            {deleteMode && selectedAreas.length > 0 && (
+              <div className="panel-actions">
+                <button className="btn delete small" onClick={handleDeleteSelected}>
+                  🗑 מחיקת נבחרים ({selectedAreas.length})
+                </button>
               </div>
             )}
           </div>
-
+        </div>
+        <div className="actions-row">
           <button className="btn-hero btn-primary" onClick={toggleForm}>
             הוספת אזור
           </button>

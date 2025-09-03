@@ -5,6 +5,8 @@ import './Login.css';
 function Login() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [regEmail, setRegEmail] = useState("");
+  const [regPhone, setRegPhone] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
   const [showRegister, setShowRegister] = useState(false);
   const [regUsername, setRegUsername] = useState("");
@@ -24,6 +26,7 @@ function Login() {
       });
       const data = await response.json();
       if (data.success) {
+        localStorage.setItem('shade_username', (data?.username || username || '').trim());
         navigate("/areaList");
       } else {
         setErrorMessage("שם משתמש או סיסמה לא נכונים!");
@@ -108,7 +111,7 @@ function Login() {
         {showRegister && (
           <div className="register-modal">
             <div className="register-content">
-              <h3>הרשמה</h3>
+              <h2>הרשמה</h2>
               <form onSubmit={handleRegister}>
                 <input
                   type="text"
@@ -127,6 +130,18 @@ function Login() {
                   placeholder="אימות סיסמה"
                   value={regConfirm}
                   onChange={(e) => setRegConfirm(e.target.value)}
+                />
+                <input
+                  type="email"
+                  placeholder="כתובת מייל"
+                  value={regEmail}
+                  onChange={(e) => setRegEmail(e.target.value)}
+                />
+                <input
+                  type="tel"
+                  placeholder="טלפון"
+                  value={regPhone}
+                  onChange={(e) => setRegPhone(e.target.value)}
                 />
                 <button type="submit">הרשם</button>
                 <button type="button" onClick={() => setShowRegister(false)}>ביטול</button>
