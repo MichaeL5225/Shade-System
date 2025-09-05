@@ -1,8 +1,8 @@
-const mySql =require('mysql2');
+const mySql = require('mysql2');
 const connection = mySql.createConnection({
     host:'localhost',
     user:'root',
-    password:'G5abmichaelm',
+    password:'0021',
     database:'shade_system_db'
 });
 connection.connect((err)=>{
