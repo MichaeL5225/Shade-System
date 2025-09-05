@@ -44,6 +44,8 @@ function AreaList() {
     formData.append('name', name);
     formData.append('description', description);
     formData.append('path', pathFile);
+    
+    console.log(formData);
 
     axios.post('/api/areas/upload', formData)
       .then(res => {
