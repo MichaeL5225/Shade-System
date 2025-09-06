@@ -129,6 +129,19 @@ function EditArea() {
     }
   };
 
+  const formatPercent = (v) => {
+    const n = typeof v === "number" ? v : parseFloat(v);
+    if (!Number.isFinite(n)) return ""; // ← prevents %undefined
+    return Number.isInteger(n) ? `${n}%` : `${n.toFixed(1)}%`;
+  };
+
+  const pick = (obj, keys) => {
+    for (const k of keys) {
+      if (obj && obj[k] !== undefined && obj[k] !== null) return obj[k];
+    }
+    return undefined;
+  };
+
   return (
     <div className="edit-area">
       <header className="area-header">
@@ -256,7 +269,7 @@ function EditArea() {
         {shades.map((shade, i) => (
           <div
             key={i}
-            className="shade-marker" // <— new wrapper class
+            className="shade-marker"
             style={{
               left: `${shade.x}px`,
               top: `${shade.y}px`,
@@ -264,16 +277,18 @@ function EditArea() {
               height: `${shade.height}px`,
             }}
           >
-            <div className="shade-icon">🏠</div>
+            {/* NEW percentage badge */}
+            <span className="shade-percent">
+              {formatPercent(pick(shade, ["percentage", "Percentage"]))}
+            </span>
 
+            <div className="shade-icon">🏠</div>
             <button
               className="shade-delete"
-              aria-label="מחק הצללה"
               onClick={(e) => {
-                e.stopPropagation(); // don't trigger map click
+                e.stopPropagation();
                 handleDeleteShade(shade);
               }}
-              title="מחק"
             >
               🗑
             </button>
@@ -290,6 +305,11 @@ function EditArea() {
               height: `${newShade.height}px`,
             }}
           >
+            {newShade.percentage !== "" && (
+              <span className="shade-percent">
+                {formatPercent(newShade.percentage)}
+              </span>
+            )}
             <div className="shade-icon">🏠</div>
           </div>
         )}
