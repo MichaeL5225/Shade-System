@@ -21,7 +21,8 @@ function EditArea() {
     width: 30,
     height: 30,
   });
-
+  const [hoveredId, setHoveredId] = useState(null);
+  const getId = (s, idx) => s?.id ?? s?.ID ?? s?.Id ?? idx;
   const mapRef = useRef();
 
   useEffect(() => {
@@ -287,14 +288,20 @@ function EditArea() {
 
             {shades.map((shade, i) => (
               <div
-                key={i}
-                className="shade-marker"
+                key={getId(shade, i)}
+                className={`shade-marker ${
+                  hoveredId === getId(shade, i) ? "is-hovered" : ""
+                }`}
                 style={{
                   left: `${shade.x}px`,
                   top: `${shade.y}px`,
                   width: `${shade.width}px`,
                   height: `${shade.height}px`,
                 }}
+                onMouseEnter={() => setHoveredId(getId(shade, i))}
+                onMouseLeave={() => setHoveredId(null)}
+                onFocus={() => setHoveredId(getId(shade, i))}
+                onBlur={() => setHoveredId(null)}
               >
                 <span
                   className="shade-percent"
@@ -375,7 +382,17 @@ function EditArea() {
                       formatPercent(pick(s, ["percentage", "Percentage"])) ||
                       "—";
                     return (
-                      <tr key={idx}>
+                      <tr
+                        key={getId(s, idx)}
+                        className={`shade-row ${
+                          hoveredId === getId(s, idx) ? "is-hovered" : ""
+                        }`}
+                        onMouseEnter={() => setHoveredId(getId(s, idx))}
+                        onMouseLeave={() => setHoveredId(null)}
+                        onFocus={() => setHoveredId(getId(s, idx))}
+                        onBlur={() => setHoveredId(null)}
+                        tabIndex={0}
+                      >
                         <td className="desc-cell" title={desc}>
                           {desc}
                         </td>

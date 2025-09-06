@@ -314,3 +314,29 @@ label textarea {
   outline: 2px solid #0f62fe;
   outline-offset: 2px;
 }
+
+/* === Cross-highlight (map <-> table) === */
+
+/* When a marker is linked/hovered, make it pop */
+.shade-marker.is-hovered .shade-icon {
+  background-color: #ffffff;
+  border-color: #38bdf8;
+  box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.35) inset,
+    0 0 0 2px rgba(56, 189, 248, 0.25);
+}
+
+.shade-marker.is-hovered {
+  outline: 2px rgba(56, 189, 248, 0.5);
+  outline-offset: 1px;
+  opacity: 0.8;
+}
+
+/* When a row is linked/hovered, highlight it */
+.shade-row.is-hovered {
+  background: #e0f2fe;
+}
+.shade-row.is-hovered .desc-cell,
+.shade-row.is-hovered .pct-cell {
+  color: #0284c7; /* blue-600 */
+  font-weight: 800;
+}
