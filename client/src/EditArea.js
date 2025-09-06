@@ -135,6 +135,22 @@ function EditArea() {
     return Number.isInteger(n) ? `${n}%` : `${n.toFixed(1)}%`;
   };
 
+  const getBadgeStyle = (w, h) => {
+    const minDim = Math.max(1, Math.min(Number(w) || 0, Number(h) || 0));
+    // font grows with size but stays within sensible bounds
+    const font = Math.round(Math.max(12, Math.min(28, minDim * 0.22)));
+    const padY = Math.round(Math.max(2, font * 0.25));
+    const padX = Math.round(Math.max(6, font * 0.4));
+    // place the badge just above the marker
+    const top = -(font + padY * 2 + 6);
+    return {
+      fontSize: `${font}px`,
+      padding: `${padY}px ${padX}px`,
+      borderRadius: `${Math.round(font * 0.5)}px`,
+      top: `${top}px`,
+    };
+  };
+
   const pick = (obj, keys) => {
     for (const k of keys) {
       if (obj && obj[k] !== undefined && obj[k] !== null) return obj[k];
@@ -278,7 +294,13 @@ function EditArea() {
             }}
           >
             {/* NEW percentage badge */}
-            <span className="shade-percent">
+            <span
+              className="shade-percent"
+              style={getBadgeStyle(
+                pick(shade, ["width", "Width"]),
+                pick(shade, ["height", "Height"])
+              )}
+            >
               {formatPercent(pick(shade, ["percentage", "Percentage"]))}
             </span>
 
@@ -306,7 +328,10 @@ function EditArea() {
             }}
           >
             {newShade.percentage !== "" && (
-              <span className="shade-percent">
+              <span
+                className="shade-percent"
+                style={getBadgeStyle(newShade.width, newShade.height)}
+              >
                 {formatPercent(newShade.percentage)}
               </span>
             )}
