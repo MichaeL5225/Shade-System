@@ -271,73 +271,133 @@ function EditArea() {
         </div>
       )}
 
-      <div className="map" ref={mapRef} onClick={handleMapClick}>
-        {areaData.path ? (
-          <img
-            src={`/uploads/${areaData.path}`}
-            alt="Map"
-            className="map-image"
-          />
-        ) : (
-          <p>🗺 כאן תופיע המפה שלך</p>
-        )}
-
-        {shades.map((shade, i) => (
-          <div
-            key={i}
-            className="shade-marker"
-            style={{
-              left: `${shade.x}px`,
-              top: `${shade.y}px`,
-              width: `${shade.width}px`,
-              height: `${shade.height}px`,
-            }}
-          >
-            {/* NEW percentage badge */}
-            <span
-              className="shade-percent"
-              style={getBadgeStyle(
-                pick(shade, ["width", "Width"]),
-                pick(shade, ["height", "Height"])
-              )}
-            >
-              {formatPercent(pick(shade, ["percentage", "Percentage"]))}
-            </span>
-
-            <div className="shade-icon">🏠</div>
-            <button
-              className="shade-delete"
-              onClick={(e) => {
-                e.stopPropagation();
-                handleDeleteShade(shade);
-              }}
-            >
-              🗑
-            </button>
-          </div>
-        ))}
-
-        {isAdding && newShade.x !== null && newShade.y !== null && (
-          <div
-            className="shade-marker"
-            style={{
-              left: `${newShade.x}px`,
-              top: `${newShade.y}px`,
-              width: `${newShade.width}px`,
-              height: `${newShade.height}px`,
-            }}
-          >
-            {newShade.percentage !== "" && (
-              <span
-                className="shade-percent"
-                style={getBadgeStyle(newShade.width, newShade.height)}
-              >
-                {formatPercent(newShade.percentage)}
-              </span>
+      <div className="area-row">
+        {/* MAP (unchanged inside) */}
+        <div className="map-wrap">
+          <div className="map" ref={mapRef} onClick={handleMapClick}>
+            {areaData.path ? (
+              <img
+                src={`/uploads/${areaData.path}`}
+                alt="Map"
+                className="map-image"
+              />
+            ) : (
+              <p>🗺 כאן תופיע המפה שלך</p>
             )}
-            <div className="shade-icon">🏠</div>
+
+            {shades.map((shade, i) => (
+              <div
+                key={i}
+                className="shade-marker"
+                style={{
+                  left: `${shade.x}px`,
+                  top: `${shade.y}px`,
+                  width: `${shade.width}px`,
+                  height: `${shade.height}px`,
+                }}
+              >
+                <span
+                  className="shade-percent"
+                  style={getBadgeStyle(
+                    pick(shade, ["width", "Width"]),
+                    pick(shade, ["height", "Height"])
+                  )}
+                >
+                  {formatPercent(pick(shade, ["percentage", "Percentage"]))}
+                </span>
+
+                <div className="shade-icon">🏠</div>
+                <button
+                  className="shade-delete"
+                  aria-label="מחק הצללה"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleDeleteShade(shade);
+                  }}
+                  title="מחק"
+                >
+                  🗑
+                </button>
+              </div>
+            ))}
+
+            {isAdding && newShade.x !== null && newShade.y !== null && (
+              <div
+                className="shade-marker"
+                style={{
+                  left: `${newShade.x}px`,
+                  top: `${newShade.y}px`,
+                  width: `${newShade.width}px`,
+                  height: `${newShade.height}px`,
+                }}
+              >
+                {newShade.percentage !== "" && (
+                  <span
+                    className="shade-percent"
+                    style={getBadgeStyle(newShade.width, newShade.height)}
+                  >
+                    {formatPercent(newShade.percentage)}
+                  </span>
+                )}
+                <div className="shade-icon">🏠</div>
+              </div>
+            )}
           </div>
-        )}
+        </div>
+
+        {/* RIGHT: SHADES TABLE (single instance) */}
+        <aside className="shade-panel" aria-label="טבלת הצללות">
+          <div className="panel-header">
+            <h3>הצללות</h3>
+            <span className="panel-count">{shades.length}</span>
+          </div>
+
+          <div className="panel-table-wrap">
+            <table className="shade-table">
+              <thead>
+                <tr>
+                  <th>שם הצללה</th>
+                  <th>אחוז</th>
+                  <th className="del-head">מחיקה</th>
+                </tr>
+              </thead>
+              <tbody>
+                {shades.length === 0 ? (
+                  <tr>
+                    <td colSpan={2} className="empty-row">
+                      אין הצללות להצגה
+                    </td>
+                  </tr>
+                ) : (
+                  shades.map((s, idx) => {
+                    const desc = pick(s, ["description", "Description"]) || "—";
+                    const pct =
+                      formatPercent(pick(s, ["percentage", "Percentage"])) ||
+                      "—";
+                    return (
+                      <tr key={idx}>
+                        <td className="desc-cell" title={desc}>
+                          {desc}
+                        </td>
+                        <td className="pct-cell">{pct}</td>
+                        <td className="del-cell">
+                          <button
+                            className="table-delete"
+                            aria-label="מחק הצללה"
+                            title="מחק"
+                            onClick={() => handleDeleteShade(s)}
+                          >
+                            🗑
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  })
+                )}
+              </tbody>
+            </table>
+          </div>
+        </aside>
       </div>
     </div>
   );
