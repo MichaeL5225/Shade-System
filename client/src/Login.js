@@ -12,7 +12,28 @@ function Login() {
   const [regUsername, setRegUsername] = useState("");
   const [regPassword, setRegPassword] = useState("");
   const [regConfirm, setRegConfirm] = useState("");
+  const [regError, setRegError] = useState("");
   const navigate = useNavigate();
+
+  const openRegister = () => {
+    setRegUsername("");
+    setRegPassword("");
+   setRegConfirm("");
+    setRegEmail("");
+    setRegPhone("");
+    setRegError("");
+    setErrorMessage("");
+    setShowRegister(true);
+  };
+  const closeRegister = () => {
+    setShowRegister(false);
+    setRegUsername("");
+    setRegPassword("");
+    setRegConfirm("");
+    setRegEmail("");
+    setRegPhone("");
+    setRegError("");
+  };
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -40,12 +61,19 @@ function Login() {
   const handleRegister = async (e) => {
     e.preventDefault();
     setErrorMessage("");
-    if (!regUsername || !regPassword || !regConfirm) {
-      setErrorMessage("מלא את כל השדות!");
+    setRegError("");
+    const u = regUsername.trim();
+    const p = regPassword.trim();
+    const c = regConfirm.trim();
+    const em = regEmail.trim();
+    const ph = regPhone.trim();
+    
+    if (!u || !p || !c || !em || !ph) {
+      setRegError("יש למלא את כל הפרטים");
       return;
     }
-    if (regPassword !== regConfirm) {
-      setErrorMessage("הסיסמאות לא תואמות!");
+    if (p !== c) {
+      setRegError("הסיסמאות לא תואמות!");
       return;
     }
 
@@ -53,22 +81,26 @@ function Login() {
       const response = await fetch("http://localhost:5000/api/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username: regUsername, password: regPassword }),
+        body: JSON.stringify({ username: u, password: p }),
       });
 
       const data = await response.json();
       if (data.success) {
+        window.alert("ההרשמה הצליחה! אפשר להתחבר עכשיו.");
         setShowRegister(false);
         setRegUsername("");
         setRegPassword("");
         setRegConfirm("");
-        setErrorMessage("ההרשמה הצליחה! אפשר להתחבר עכשיו.");
+        setRegEmail("");
+        setRegPhone("");
+        setErrorMessage("");
+        setRegError("");
       } else {
-        setErrorMessage(data.error || "שגיאה בהרשמה");
+        setRegError(data.error || "שגיאה בהרשמה");
       }
     } catch (error) {
       console.error("Error:", error);
-      setErrorMessage("שגיאה בשרת. נסה שוב מאוחר יותר.");
+      setRegError("שגיאה בשרת. נסה שוב מאוחר יותר.");
     }
   };
 
@@ -104,7 +136,7 @@ function Login() {
           <button type="submit">התחבר</button>
         </form>
 
-        <div className="register-link" onClick={() => setShowRegister(true)}>
+        <div className="register-link" onClick={openRegister}>
           לא רשום עדיין? הירשם עכשיו
         </div>
 
@@ -143,8 +175,11 @@ function Login() {
                   value={regPhone}
                   onChange={(e) => setRegPhone(e.target.value)}
                 />
-                <button type="submit">הרשם</button>
-                <button type="button" onClick={() => setShowRegister(false)}>ביטול</button>
+                {regError && <div className="error-message">{regError}</div>}
+                <button type="submit">
+                  הרשם
+                </button>
+                <button type="button" onClick={closeRegister}>ביטול</button>
               </form>
             </div>
           </div>

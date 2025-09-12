@@ -1,9 +1,21 @@
 /* ===== EditArea (דף עריכת אזור) ===== */
 .edit-area {
+  --header-h: 64px;            /* גובה מוערך של הפס הכחול למעלה */
+  --footer-h: 96px;
   min-height: 100vh;
+  --thead-h: 56px;             /* גובה כותרת הטבלה (thead) */
+  --row-h: 68px;                   /* גובה משוער לשורת טבלה אחת */
+  --max-rows: 6;               /* אחרי 6 שורות – עוברים לגלילה */
   display: flex;
   flex-direction: column;
   direction: rtl; /* חשוב ל־RTL */
+  position: relative;
+  left: 50%;
+  right: 50%;
+  margin-left: -50vw;
+  margin-right: -50vw;
+  width: 100vw;
+  max-width: 100vw;
 }
 
 /* כותרת עליונה */
@@ -29,11 +41,11 @@
   margin: 0;
 }
 .area-info h2 {
-  font-size: 20px;
+  font-size: 24px;
   font-weight: 800;
 }
 .area-info p {
-  font-size: 14px;
+  font-size: 16px;
   opacity: 0.95;
 }
 
@@ -63,25 +75,44 @@ label textarea {
 
 /* טופס הוספת הצללה */
 .shade-form {
-  background-color: #e8f4ff;
+  background: linear-gradient(180deg, #fff7f2 0%, #fff1ec 100%);
   padding: 12px;
   text-align: center;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(180px, 1fr));
+  gap: 8px 10px;
   justify-content: center;
+  max-width: 720px;
+  margin: 0 auto;
 }
 .shade-form input {
-  width: 110px;
-  height: 40px;
-  padding: 6px 8px;
-  border-radius: 8px;
+  width: 92%;                 
+  height: 36px;                 
+  padding: 6px 10px;
+  border-radius: 10px;
   border: 1px solid #cbd5e1;
+  font-size: 14px;
+  box-sizing: border-box; 
+  justify-self: center;
 }
 .shade-form button {
-  padding: 8px 16px;
-  border-radius: 8px;
+  width: auto;
+  display: flex;
+  justify-content: center;
+  padding: 6px 12px;
+  gap: 10px;
+  font-size: 14px;
+  margin-top: 6px;
 }
+.shade-panel .shade-form .button:hover {
+  background: linear-gradient(135deg, #ffb26b 0%, #ff86b4 100%);
+  color: #fff;
+  filter: brightness(1.06);
+  transform: translateY(-1px);
+}
+
+.shade-form button:nth-last-of-type(2) { grid-column: 1; }
+.shade-form button:last-of-type       { grid-column: 2; }
 
 /* ===== מפה ===== */
 .map {
@@ -89,16 +120,16 @@ label textarea {
   display: flex;
   justify-content: center;
   align-items: center;
-  flex: 1;
-  margin: 12px auto;
   width: 100%;
-  max-width: 1000px;
+ height: 100%;
+  margin: 0;
 }
 
 .map-image {
   width: 100%;
-  height: auto;
-  object-fit: contain;
+  height: 100%;
+  object-fit: cover;         /* ממלאת את כל ה־70% ושומרת יחס – בלי עיוות */
+  object-position: center;   /* חיתוך מאוזן כשצריך (בלי שוליים לבנים) */
   display: block;
 }
 
@@ -178,28 +209,38 @@ label textarea {
 /* ===== פריסה: מפה באמצע + פאנל מימין ===== */
 .area-row {
   direction: ltr;
-  display: flex;
-  justify-content: center;
-  gap: 16px;
-  padding: 12px 16px;
+  display: grid;
+  grid-template-columns: minmax(0, 70%) minmax(0, 30%);
+  gap: 0;
+  padding: 0;
+  height: 100vh;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .map-wrap {
-  flex: 0 1 1000px;
+  grid-column: 1 / 2;
+  height: 100%;
+  overflow: hidden;
 }
 
 .shade-panel {
-  width: 320px;
+  grid-column: 2 / 3;
+  height: 100%;
+  box-sizing: border-box;
   direction: rtl;
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
-  border-radius: 12px;
-  box-shadow: 0 6px 16px rgba(2, 6, 23, 0.06);
-  padding: 12px;
-  position: sticky;
-  top: 64px;
-  max-height: calc(100vh - 80px);
-  overflow: auto;
+  background: linear-gradient(180deg, #f8fafc 0%, #eef2f7 100%);
+  border-left: 1px solid #e9eef5;
+  border-right: none;
+  border-top: none;
+  border-bottom: none;
+  border-radius: 0;
+  box-shadow: none;
+  padding: 16px 16px calc(16px + var(--footer-h)) 16px;
+  display: flex; 
+  flex-direction: column;
+  overflow: hidden; 
+  min-height: 0;
 }
 
 /* תוכן הפאנל */
@@ -212,22 +253,15 @@ label textarea {
 }
 .panel-header h3 {
   margin: 0;
-  font-size: 16px;
+  font-size: 18px;
   font-weight: 800;
   color: #0f172a;
 }
-.panel-count {
-  background: #0f62fe;
-  color: #fff;
-  border-radius: 999px;
-  padding: 2px 8px;
-  font-size: 12px;
-  font-weight: 700;
-}
+.panel-count { display: none; }
 
-.panel-table-wrap {
-  overflow-x: auto;
-}
+.panel-area-title { margin: 0 0 4px; font-size: 20px; font-weight: 800; color: #0f172a; }
+.panel-area-desc  { margin: 0 0 12px; font-size: 14px; color: #64748b; }
+.panel-actions    { display: flex; gap: 8px; margin-bottom: 12px; }
 
 .shade-table {
   width: 100%;
@@ -237,7 +271,7 @@ label textarea {
 }
 .shade-table thead th {
   text-align: right;
-  font-size: 13px;
+  font-size: 15px;
   font-weight: 800;
   color: #0f172a;
   background: #f1f5f9;
@@ -250,9 +284,12 @@ label textarea {
 .shade-table tbody td {
   padding: 10px 8px;
   border-bottom: 1px solid #f1f5f9;
-  font-size: 13px;
+  font-size: 15px;
   color: #0f172a;
   vertical-align: middle;
+}
+.shade-table tbody tr {
+  height: var(--row-h);
 }
 .shade-table tbody tr:hover {
   background: #f8fafc;
@@ -339,4 +376,261 @@ label textarea {
 .shade-row.is-hovered .pct-cell {
   color: #0284c7; /* blue-600 */
   font-weight: 800;
+}
+
+/* שינויים אחרונים */
+.edit-area-layout {
+  display: grid;
+  grid-template-columns: 70% 30%;
+  gap: 0;
+  width: 100%;
+  height: 100vh;              /* ממלא גובה מסך */
+  box-sizing: border-box;
+}
+
+.edit-area-left {
+  position: relative;
+  overflow: hidden;            /* בלי גלילה אנכית */
+  background: #0000;           /* ללא מסגרת/רקע */
+}
+
+.edit-area-left img,
+.edit-area-left canvas,
+.edit-area-left video {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;         /* "כולה-נראית" – בלי חיתוך */
+  border: 0;
+}
+
+.edit-area-right {
+  background: #fff;
+  border-left: 1px solid #e9eef5;
+  padding: 16px 18px;
+  overflow: auto;              /* גלילה פנימית רק לימין אם צריך */
+}
+
+.area-title {
+  margin: 0 0 4px 0;
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.area-desc {
+  margin: 0 0 14px 0;
+  font-size: 14px;
+  color: #6b7280;              /* אפור עדין לכותרת משנית */
+}
+
+.area-actions {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.shade-table-wrap {
+  margin-top: 4px;
+}
+
+
+.panel-area-info { margin-bottom: 8px; }
+.panel-area-title {
+  margin: 0 0 4px;
+  font-size: 30px;
+  font-weight: 800;
+  color: #0f172a;
+}
+.panel-area-desc {
+  margin:0 0 12px;
+  font-size: 18px;
+  color: #64748b;
+}
+.panel-actions {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+
+.panel-area-info { margin-bottom: 8px; }
+.panel-area-title { margin: 0; font-size: 30px; font-weight: 800; color: #0f172a; text-align: center; }
+.panel-area-desc  { margin: 4px 0 12px 0; font-size: 20px; color: #64748b; text-align: center; }
+.panel-actions   { display: flex; gap: 8px; margin: 12px 0; justify-content: center; }
+.field-label      { font-size: 12px; color: #475569; margin: 6px 0 4px; display: block; }
+.shade-input      { width: 100%; padding: 6px 8px; border: 1px solid #e2e8f0; border-radius: 8px; box-sizing: border-box; }
+.percent-input    { width: 90px; padding: 6px 8px; text-align: center; border: 1px solid #e2e8f0; border-radius: 8px; box-sizing: border-box; }
+.table-delete:disabled { opacity: .45; cursor: not-allowed; }
+
+body { margin: 0; }
+
+html, body { overflow-x: hidden; }
+
+.map-wrap,
+.shade-panel,
+.panel-table-wrap {
+  min-width: 0;
+}
+
+.shade-table th,
+.shade-table td {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis; /* טקסט עודף יקבל … במקום לחתוך אל מחוץ לפאנל */
+}
+
+/* ===== עיגול הצללה “ירח” ===== */
+.shade-dot {
+  position: relative;
+  overflow: hidden;                 /* חותך את העיגול הלבן בפנים */
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  box-sizing: border-box;
+  background: #000;                 /* שחור = 100% צל */
+  border: 2px solid #000;           /* מסגרת שחורה נקייה */
+}
+.shade-dot::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: calc(50% + (var(--pct, 0) * 1.08%)); /* 0% לבן מלא, 100% יוצא החוצה */
+  transform: translate(-50%, -50%);
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background: #fff;                 /* לבן מכסה – יוצר "סרֵט ירח" */
+}
+
+/* בלוק דביק בראש הפאנל הימני לטופס הוספת הצללה */
+.panel-sticky {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: #fff;                /* כדי שלא יראה שקוף מעל הטבלה */
+  border-bottom: 1px solid #e9eef5; /* קו מפריד עדין */
+}
+
+/* בתוך הפאנל הימני ניישר את הטופס לשמאל (במקום מרכז) */
+.shade-panel .shade-form {
+  justify-content: center;
+}
+
+ /* וריאציית גרדיאנט לכפתורי פעולות (כמו 'הוספת אזור' במסך הראשי) */
+.button{
+  background: linear-gradient(135deg, #ff7a00 0%, #ff3d71 100%);
+  color:#fff;
+  border:0;
+  font-weight:800;
+  box-shadow: 0 10px 24px rgba(0,0,0,.12);
+}
+.button.button:hover{
+  background: linear-gradient(135deg, #ff7a00 0%, #ff3d71 100%);
+  color:#fff;
+  filter: brightness(1.05);
+  transform: translateY(-1px);
+  border-color: transparent;
+}
+
+.panel-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 12px 28px rgba(2, 6, 23, 0.08);
+  overflow: hidden;              /* שומר על רדיוסים גם כשיש גלילה */
+  flex: 1 1 auto;                /* תופס את הגובה הזמין בפאנל */
+  min-height: 0;
+}
+
+/* הכותרת בתוך הכרטיס נהיית נקייה, בלי מרווחים חיצוניים */
+.panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 14px 12px;
+  margin: 0;                    /* במקום margin-bottom שהיה קודם */
+  background: #fff;
+  border-bottom: 1px solid #eef2f7;
+}
+
+/* אזור הטבלה – תופס את כל הגובה שנותר בתוך הכרטיס */
+.panel-table-wrap {
+  flex: 1 1 auto;
+  min-height: 0;
+  width: 100%;
+  overflow: auto;
+  background: #fff;
+  max-height: calc(var(--thead-h) + (var(--row-h) * var(--max-rows)));
+  padding-bottom: 0;
+  direction: ltr;                /* מזיז את הגלילה לצד ימין (הטבלה עצמה נשארת RTL) */
+  scrollbar-width: thin; 
+}
+
+.panel-table-wrap::-webkit-scrollbar{
+  width: 10px;
+}
+.panel-table-wrap::-webkit-scrollbar-thumb{
+  background: rgba(2, 6, 23, .28);
+  border-radius: 8px;
+}
+.panel-table-wrap::-webkit-scrollbar-track{
+  background: transparent;
+  margin-top: var(--thead-h);    /* מתחיל מהשורה הראשונה (מתחת ל־thead) */
+  margin-bottom: 2px;            /* סוף קצר ונקי מעל הרדיוס התחתון של הכרטיס */
+}
+
+/* אייקון פח אדום */
+.trash-red { color: #ef4444; }              /* red-500 */
+.table-delete,
+.shade-delete { color: #ef4444; }
+.table-delete:hover,
+.shade-delete:hover {
+  background: #fee2e2;                      /* red-100 */
+  color: #dc2626;                            /* red-600 */
+}
+/* אם יש מצב :disabled – לשמור על אייקון חצי שקוף */
+.table-delete:disabled { opacity: .45; cursor: not-allowed; }
+
+.panel-subtitle{
+  text-align: center;
+  color: #64748b;            /* slate-500 */
+  font-size: 14px;
+  font-weight: 700;
+  padding: 8px 12px;
+  background: #fff;
+  border-bottom: 1px solid #eef2f7;
+}
+
+.shade-panel .panel-actions .button.button:hover,
+.shade-panel .shade-form .button.button:hover {
+  background: linear-gradient(135deg, #ffb26b 0%, #ff86b4 100%);
+  color: #fff;
+  filter: brightness(1.06);
+  transform: translateY(-1px);
+  border-color: transparent;
+}
+
+/* כפתור חזרה מקובע לפינה הימנית־תחתונה של המסך */
+.panel-footer{
+  position: fixed;
+  right: 24px;                       /* מרחק מהצד הימני של המסך */
+  bottom: max(16px, env(safe-area-inset-bottom)); /* בטוח גם באייפון */
+  z-index: 20;                       /* מעל התוכן */
+  display: flex;
+  justify-content: flex-end;
+  pointer-events: auto;
+}
+.panel-footer .button:hover{
+  background: linear-gradient(135deg, #ffb26b 0%, #ff86b4 100%);
+  color: #fff;
+  filter: brightness(1.06);
+  transform: translateY(-1px);
+  border-color: transparent;
+}
+.panel-footer .button{
+  border-radius: 12px;
+  box-shadow: 0 10px 24px rgba(0,0,0,.12);
 }

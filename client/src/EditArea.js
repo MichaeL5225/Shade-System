@@ -1,7 +1,19 @@
 import React, { useEffect, useState, useRef } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
 import "./EditArea.css";
+
+const TrashIcon = ({ size = 16 }) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="currentColor"
+    aria-hidden="true"
+  >
+    <path d="M9 3h6a1 1 0 0 1 1 1v1h4a1 1 0 1 1 0 2h-1v13a3 3 0 0 1-3 3H8a3 3 0 0 1-3-3V7H4a1 1 0 1 1 0-2h4V4a1 1 0 0 1 1-1Zm6 2V4H9v1h6ZM7 7v13a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V7H7Zm3 3a1 1 0 1 1 2 0v8a1 1 0 1 1-2 0v-8Zm4 0a1 1 0 1 1 2 0v8a1 1 0 1 1-2 0v-8Z"/>
+  </svg>
+);
 
 function EditArea() {
   const { name } = useParams();
@@ -11,6 +23,7 @@ function EditArea() {
     path: "",
   });
   const [editMode, setEditMode] = useState(false);
+  const [editableShades, setEditableShades] = useState([]);
   const [isAdding, setIsAdding] = useState(false);
   const [shades, setShades] = useState([]);
   const [newShade, setNewShade] = useState({
@@ -24,6 +37,12 @@ function EditArea() {
   const [hoveredId, setHoveredId] = useState(null);
   const getId = (s, idx) => s?.id ?? s?.ID ?? s?.Id ?? idx;
   const mapRef = useRef();
+  const navigate = useNavigate();
+  const handleBack = () => {
+    // אם יש היסטוריה – חזרה צעד אחד; אחרת לנווט לרשימת האזורים (עמוד הבית)
+    if (window.history.length > 1) navigate(-1);
+    else navigate("/");
+  };
 
   useEffect(() => {
     axios
@@ -84,6 +103,65 @@ function EditArea() {
       x: Math.round(offsetX + xWithinImg),
       y: Math.round(offsetY + yWithinImg),
     }));
+  };
+
+  const startEdit = () => {
+    setEditMode(true);
+    setEditableShades(shades.map(s => ({ ...s })));
+  };
+
+  const cancelEdit = () => {
+    setEditMode(false);
+    setEditableShades([]);
+  };
+
+  const handleAreaField = (key, value) => {
+    setAreaData(prev => ({ ...prev, [key]: value }));
+  };
+
+  const handleShadeField = (idx, key, value) => {
+    setEditableShades(prev => {
+      const next = [...prev];
+      next[idx] = { ...next[idx], [key]: key === "percentage" ? String(value).replace(/[^\d]/g, "") : value };
+      return next;
+    });
+  };
+
+  const saveEdit = async () => {
+    try {
+      // 1) עדכון פרטי האזור (שם/תיאור)
+      const areaPayload = { name: areaData.name, description: areaData.description };
+      await axios.put(`/api/areas/name/${encodeURIComponent(name)}`, areaPayload);
+
+      // 2) עדכון הצללות ששונו בלבד (שם=description, אחוז=percentage)
+      const byId = new Map(shades.map((s, i) => [getId(s, i), s]));
+      for (let i = 0; i < editableShades.length; i++) {
+        const cur  = editableShades[i];
+        const id   = getId(cur, i);
+        const orig = byId.get(id);
+        if (!orig) continue;
+        const next = {};
+        const curPct  = cur.percentage ?? cur.Percentage ?? cur.percent;
+        const origPct = orig.percentage ?? orig.Percentage ?? orig.percent;
+        const curDesc  = cur.description ?? cur.Description ?? "";
+        const origDesc = orig.description ?? orig.Description ?? "";
+        if (String(curPct ?? "") !== String(origPct ?? "")) next.percentage = Number(curPct) || 0;
+        if (curDesc !== origDesc) next.description = curDesc;
+        if (Object.keys(next).length > 0) {
+          await axios.put(`/api/shades/${id}`, next);
+        }
+      }
+
+      // 3) רענון נתונים וסיום עריכה
+      const updatedArea   = await axios.get(`/api/areas/name/${encodeURIComponent(areaData.name)}`);
+      setAreaData(updatedArea.data);
+      const updatedShades = await axios.get(`/api/shades/${encodeURIComponent(areaData.name)}`);
+      setShades(updatedShades.data);
+      setEditMode(false);
+    } catch (err) {
+      console.error("שגיאה בשמירת עריכה:", err);
+      alert("❌ שמירה נכשלה");
+    }
   };
 
   const handleSaveShade = async () => {
@@ -159,118 +237,10 @@ function EditArea() {
     return undefined;
   };
 
+  const displayShades = editMode ? editableShades : shades;
+
   return (
     <div className="edit-area">
-      <header className="area-header">
-        {editMode ? (
-          <>
-            <label>
-              שם האזור:
-              <input
-                value={areaData.name}
-                onChange={(e) =>
-                  setAreaData({ ...areaData, name: e.target.value })
-                }
-              />
-            </label>
-            <label>
-              תיאור אזור:
-              <textarea
-                value={areaData.description}
-                onChange={(e) =>
-                  setAreaData({ ...areaData, description: e.target.value })
-                }
-              />
-            </label>
-            <div className="button-group">
-              <button
-                className="button"
-                onClick={async () => {
-                  await axios.put(
-                    `/api/areas/name/${encodeURIComponent(name)}`,
-                    areaData
-                  );
-                  setEditMode(false);
-                }}
-              >
-                💾 שמור
-              </button>
-            </div>
-          </>
-        ) : (
-          <>
-            <div className="area-info">
-              <h2>שם האזור: {areaData.name}</h2>
-              <p>תיאור אזור: {areaData.description}</p>
-            </div>
-
-            <div className="button-group">
-              <button className="button" onClick={() => setEditMode(true)}>
-                ⚙️ ערוך אזור
-              </button>
-              <button className="button" onClick={handleToggleAdd}>
-                {isAdding ? "❌ בטל הצללה" : "➕ הוסף הצללה"}
-              </button>
-            </div>
-          </>
-        )}
-      </header>
-
-      {isAdding && (
-        <div className="shade-form">
-          <input
-            type="number"
-            placeholder="אחוז"
-            value={newShade.percentage}
-            onChange={(e) =>
-              setNewShade({ ...newShade, percentage: e.target.value })
-            }
-          />
-          <input
-            type="text"
-            placeholder="תיאור"
-            value={newShade.description}
-            onChange={(e) =>
-              setNewShade({ ...newShade, description: e.target.value })
-            }
-          />
-          <input
-            type="number"
-            placeholder="X"
-            value={newShade.x ?? ""}
-            onChange={(e) =>
-              setNewShade({ ...newShade, x: parseInt(e.target.value) })
-            }
-          />
-          <input
-            type="number"
-            placeholder="Y"
-            value={newShade.y ?? ""}
-            onChange={(e) =>
-              setNewShade({ ...newShade, y: parseInt(e.target.value) })
-            }
-          />
-          <input
-            type="number"
-            placeholder="רוחב"
-            value={newShade.width}
-            onChange={(e) =>
-              setNewShade({ ...newShade, width: parseInt(e.target.value) })
-            }
-          />
-          <input
-            type="number"
-            placeholder="גובה"
-            value={newShade.height}
-            onChange={(e) =>
-              setNewShade({ ...newShade, height: parseInt(e.target.value) })
-            }
-          />
-          <button className="button" onClick={handleSaveShade}>
-            💾 שמור הצללה
-          </button>
-        </div>
-      )}
 
       <div className="area-row">
         {/* MAP (unchanged inside) */}
@@ -286,7 +256,7 @@ function EditArea() {
               <p>🗺 כאן תופיע המפה שלך</p>
             )}
 
-            {shades.map((shade, i) => (
+            {displayShades.map((shade, i) => (
               <div
                 key={getId(shade, i)}
                 className={`shade-marker ${
@@ -313,7 +283,12 @@ function EditArea() {
                   {formatPercent(pick(shade, ["percentage", "Percentage"]))}
                 </span>
 
-                <div className="shade-icon">🏠</div>
+                {/* עיגול לבן שמתמלא אפור לפי אחוז ההצללה */}
+                {(() => {
+                  const raw = pick(shade, ["percentage", "Percentage", "percent"]);
+                  const pct = Math.max(0, Math.min(100, Number(raw) || 0));
+                  return <div className="shade-dot" style={{ "--pct": pct }} />;
+                })()}
                 <button
                   className="shade-delete"
                   aria-label="מחק הצללה"
@@ -323,7 +298,7 @@ function EditArea() {
                   }}
                   title="מחק"
                 >
-                  🗑
+                  <span className="trash-red"><TrashIcon size={14} /></span>
                 </button>
               </div>
             ))}
@@ -346,7 +321,7 @@ function EditArea() {
                     {formatPercent(newShade.percentage)}
                   </span>
                 )}
-                <div className="shade-icon">🏠</div>
+                 <div className="shade-dot" style={{ "--pct": Number(newShade.percentage) || 0 }} />
               </div>
             )}
           </div>
@@ -354,65 +329,191 @@ function EditArea() {
 
         {/* RIGHT: SHADES TABLE (single instance) */}
         <aside className="shade-panel" aria-label="טבלת הצללות">
-          <div className="panel-header">
-            <h3>הצללות</h3>
-            <span className="panel-count">{shades.length}</span>
-          </div>
+          {/* פרטי אזור + מצב עריכה */}
+          {editMode ? (
+            <>
+              <label className="field-label">שם האזור</label>
+              <input
+                className="shade-input"
+                value={areaData.name}
+                onChange={(e) => handleAreaField("name", e.target.value)}
+              />
+              <label className="field-label">תיאור האזור</label>
+              <textarea
+                className="shade-input"
+                rows={3}
+                value={areaData.description}
+                onChange={(e) => handleAreaField("description", e.target.value)}
+              />
+              <div className="panel-actions">
+                <button className="button" onClick={saveEdit}> שמור</button>
+                <button className="button" onClick={cancelEdit}>בטל</button>
+             </div>
+           </>
+          ) : (
+            <>
+              <div className="panel-area-info">
+                <h2 className="panel-area-title">{areaData.name}</h2>
+                <p className="panel-area-desc">{areaData.description}</p>
+              </div>
+              {!isAdding && (
+                <div className="panel-actions">
+                  <button className="button button-primary" onClick={startEdit}> עריכת אזור</button>
+                  <button className="button button-primary" onClick={handleToggleAdd}> הוספת הצללה</button>
+                </div>
+              )}
+            </>
+          )}
 
-          <div className="panel-table-wrap">
-            <table className="shade-table">
-              <thead>
-                <tr>
-                  <th>שם הצללה</th>
-                  <th>אחוז</th>
-                  <th className="del-head">מחיקה</th>
-                </tr>
-              </thead>
-              <tbody>
-                {shades.length === 0 ? (
+          {/* טופס הוספת הצללה – בתוך הפאנל ובראשו (דביק) */}
+          {isAdding && (
+            <div className="panel-sticky">
+              <div className="shade-form">
+                <input
+                  type="number"
+                  placeholder="אחוז"
+                  value={newShade.percentage}
+                  onChange={(e) =>
+                    setNewShade({ ...newShade, percentage: e.target.value })
+                  }
+                />
+                <input
+                  type="text"
+                  placeholder="תיאור"
+                  value={newShade.description}
+                  onChange={(e) =>
+                    setNewShade({ ...newShade, description: e.target.value })
+                  }
+                />
+                <input
+                  type="number"
+                  placeholder="X"
+                  value={newShade.x ?? ""}
+                  onChange={(e) =>
+                    setNewShade({ ...newShade, x: parseInt(e.target.value) })
+                  }
+                />
+                <input
+                  type="number"
+                  placeholder="Y"
+                  value={newShade.y ?? ""}
+                  onChange={(e) =>
+                    setNewShade({ ...newShade, y: parseInt(e.target.value) })
+                  }
+                />
+                <input
+                  type="number"
+                  placeholder="רוחב"
+                  value={newShade.width}
+                  onChange={(e) =>
+                    setNewShade({ ...newShade, width: parseInt(e.target.value) })
+                  }
+                />
+                <input
+                  type="number"
+                  placeholder="גובה"
+                  value={newShade.height}
+                  onChange={(e) =>
+                    setNewShade({ ...newShade, height: parseInt(e.target.value) })
+                  }
+                />
+                <button className="button" onClick={handleSaveShade}> שמור </button>
+                <button className="button" onClick={handleToggleAdd}> בטל</button>
+              </div>
+            </div>
+          )}
+
+          <div className="panel-card">
+            <div className="panel-header">
+              <h3>הצללות</h3>
+            </div>
+            <div className="panel-subtitle">
+              מספר ההצללות באזור – {(editMode ? editableShades.length : shades.length)}
+            </div>
+             
+            <div className="panel-table-wrap">
+              <table className="shade-table">
+                <thead>
                   <tr>
-                    <td colSpan={2} className="empty-row">
-                      אין הצללות להצגה
-                    </td>
+                    <th>שם הצללה</th>
+                    <th>אחוז</th>
+                    <th className="del-head">מחיקה</th>
                   </tr>
-                ) : (
-                  shades.map((s, idx) => {
-                    const desc = pick(s, ["description", "Description"]) || "—";
-                    const pct =
-                      formatPercent(pick(s, ["percentage", "Percentage"])) ||
-                      "—";
-                    return (
-                      <tr
-                        key={getId(s, idx)}
-                        className={`shade-row ${
-                          hoveredId === getId(s, idx) ? "is-hovered" : ""
-                        }`}
-                        onMouseEnter={() => setHoveredId(getId(s, idx))}
-                        onMouseLeave={() => setHoveredId(null)}
-                        onFocus={() => setHoveredId(getId(s, idx))}
-                        onBlur={() => setHoveredId(null)}
-                        tabIndex={0}
-                      >
-                        <td className="desc-cell" title={desc}>
-                          {desc}
-                        </td>
-                        <td className="pct-cell">{pct}</td>
-                        <td className="del-cell">
-                          <button
-                            className="table-delete"
-                            aria-label="מחק הצללה"
-                            title="מחק"
-                            onClick={() => handleDeleteShade(s)}
-                          >
-                            🗑
-                          </button>
-                        </td>
-                      </tr>
-                    );
-                  })
-                )}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {(editMode ? editableShades : shades).length === 0 ? (
+                    <tr>
+                      <td colSpan={2} className="empty-row">
+                        אין הצללות להצגה
+                      </td>
+                    </tr>
+                  ) : (
+                    (editMode ? editableShades : shades).map((s, idx) => {
+                      const desc = pick(s, ["description", "Description"]) ?? "";
+                      const pct  = pick(s, ["percentage", "Percentage"]);
+                      return (
+                        <tr
+                          key={getId(s, idx)}
+                          className={`shade-row ${
+                            hoveredId === getId(s, idx) ? "is-hovered" : ""
+                          }`}
+                          onMouseEnter={() => setHoveredId(getId(s, idx))}
+                          onMouseLeave={() => setHoveredId(null)}
+                          onFocus={() => setHoveredId(getId(s, idx))}
+                          onBlur={() => setHoveredId(null)}
+                          tabIndex={0}
+                        >
+                          <td className="desc-cell" title={desc}>
+                            {editMode ? (
+                              <input
+                                className="shade-input"
+                                value={desc}
+                                onChange={(e) =>
+                                  handleShadeField(idx, "description", e.target.value)
+                                }
+                              />
+                            ) : (
+                              desc || "—"
+                            )}
+                          </td>
+                          <td className="pct-cell">
+                            {editMode ? (
+                              <input
+                                type="number"
+                                min="0"
+                                max="100"
+                                className="percent-input"
+                                value={pct ?? ""}
+                                onChange={(e) =>
+                                  handleShadeField(idx, "percentage", e.target.value)
+                                }
+                              />
+                            ) : (
+                              formatPercent(pct) || "—"
+                            )}
+                          </td>
+                          <td className="del-cell">
+                            <button
+                              className="table-delete"
+                              aria-label="מחק הצללה"
+                              title="מחק"
+                              onClick={() => handleDeleteShade(s)}
+                              disabled={editMode}
+                            >
+                              <span className="trash-red"><TrashIcon /></span>
+                            </button>
+                          </td>
+                        </tr>
+                      );
+                    })
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+          {/* כפתור חזרה – מתחת לטבלה */}
+          <div className="panel-footer">
+            <button className="button" onClick={handleBack}> חזרה</button>
           </div>
         </aside>
       </div>

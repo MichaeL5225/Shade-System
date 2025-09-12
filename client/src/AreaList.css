@@ -311,13 +311,22 @@ body {
 .submit-btn {
   min-width: 120px;
   height: 44px;
-  background: #1d4ed8;  
+  background: linear-gradient(135deg, #ff7a00 0%, #ff3d71 100%);  
   color: #fff;
   border: none;          
   border-radius: 10px;
   font-weight: 700;
+  box-shadow: 0 10px 24px rgba(0,0,0,.12);
 }
-.submit-btn:hover { filter: brightness(1.05); }
+.form-actions .submit-btn:hover,
+.submit-btn:hover{
+  background: linear-gradient(135deg, #ffb26b 0%, #ff86b4 100%) !important;
+  color: #fff !important;
+  filter: brightness(1.06);
+  transform: translateY(-1px);
+  box-shadow: 0 12px 28px rgba(255,61,113,.35);
+  border: 0 !important;
+}
 
 .file-row {
   display: flex;
