@@ -117,7 +117,7 @@
 
 .register-content {
   background-color: white;
-  padding: 20px;
+  padding: 18px;
   border-radius: 10px;
   width: 300px;
   display: flex;
@@ -125,14 +125,13 @@
 }
 
 .register-content input {
-  width: 100%;
+  width: 90%;
   padding: 10px;  
-  margin: 5px 0;
+  margin: 6px 0 0;
   padding: 8px;
   border-radius: 8px;
   border: 1px solid #e2e8f0;
   font-size: 15px;
-  margin-bottom: 10px;
 }
 
 .register-content form button[type="submit"]{
@@ -146,6 +145,7 @@
   cursor:pointer;
   transition:transform .08s ease, filter .2s ease, box-shadow .2s ease, background .2s ease;
   margin-top:10px;
+  width: 90%;
 }
 .register-content form button[type="submit"]:hover:not(:disabled){
   background:linear-gradient(135deg,var(--g1h) 0%,var(--g2h) 100%);
@@ -167,3 +167,389 @@
   background:#e2e8f0;
 }
 
+.register-content .error-message {
+  margin: 6px 0;
+}
+
+/* מצב מובייל */
+@media (max-width: 480px) {
+  .login-container {
+    width: 80vw;         
+    max-width: 300px;    
+    min-height: auto;
+    padding: 14px 16px;
+    border-radius: 14px;
+    gap: 10px;
+  }
+  .login-container h2 {
+    font-size: 20px;
+  }
+  .login-container input[type="text"],
+  .login-container input[type="password"] {
+    width: 100%;
+    max-width: 100%;
+    height: 32px;           
+    padding: 6px 12px;      
+    font-size: 12px;
+    line-height: 1.2;
+    box-sizing: border-box;
+    -webkit-appearance: none;
+    appearance: none;
+  }
+  .login-container form button[type="submit"] {
+    width: 100%;
+    max-width: 100%;
+    height: 30px;           
+    padding: 4px 10px;
+    font-size: 11px;
+    box-sizing: border-box;
+  }
+  .error-message {
+    max-width: 100%;
+    font-size: 12px;
+    padding: 8px 10px;
+  }
+  .register-link {
+    font-size: 12px;
+  }
+  .register-content input[type="email"],
+  .register-content input[type="tel"]{
+    width: 100%;
+    max-width: 100%;
+    height: 32px;
+    padding: 6px 12px;
+    font-size: 12px;
+    line-height: 1.2;
+    box-sizing: border-box;
+    -webkit-appearance: none;
+    appearance: none;
+  }
+  .register-content form button[type="submit"]{
+    height: 30px;
+    font-size: 11px;
+    padding: 4px 10px;
+    box-sizing: border-box;
+  }
+  .register-content input{ margin: 4px 0; }
+}
+
+/* התאמה למכשירים בינוניים */
+@media (min-width: 481px) and (max-width: 600px) and (orientation: portrait) {
+  .login-container {
+    width: 75vw;
+    max-width: 340px;
+    padding: 14px 16px;
+  }
+  .login-container input[type="text"],
+  .login-container input[type="password"] {
+    height: 32px;
+    font-size: 12px;
+  }
+  .login-container form button[type="submit"] {
+    height: 30px;
+    font-size: 11px;
+  }
+  .register-content input[type="email"],
+  .register-content input[type="tel"]{
+    height: 32px;
+    font-size: 12px;
+  }
+  .register-content form button[type="submit"]{
+    height: 30px;
+    font-size: 11px;
+  }
+  .register-content input{ margin: 4px 0; }
+}
+
+/* התאמות למסך מסובב לפי גובה*/
+@media (orientation: landscape) and (max-height: 600px) {
+  .login-container {
+    width: 60vw;
+    max-width: 420px;
+    padding: 12px 14px;
+    gap: 8px;
+  }
+  .login-container input[type="text"],
+  .login-container input[type="password"] {
+    height: 30px;
+    font-size: 14px;
+    padding: 6px 10px;
+    margin: 4px 2;     
+    width: 90%;
+  }
+  .login-container form button[type="submit"] {
+    height: 28px;
+    font-size: 14px;
+    padding: 4px 8px;
+    width: 90%;
+  }
+  .error-message { 
+    font-size: 13px; 
+    padding: 6px 8px;
+    width: 90%;
+  }
+  .register-content {
+    width: min(58vw, 400px);   
+    padding: 8px 10px;
+    max-height: 88vh;          
+    overflow: auto;
+  }
+  .register-content input {
+    height: 30px;
+    font-size: 14px;
+    padding: 6px 10px;
+    margin: 4px 0;             
+  }
+  .register-content form button[type="submit"]{
+    height: 28px;
+    font-size: 14px;
+    padding: 4px 8px;
+    width: 76%;
+    margin: 6px auto 0;
+  }
+  .register-content .error-message { 
+    font-size: 13px; 
+    padding: 6px 8px;
+    width: 90%;
+   }
+}
+
+@media (orientation: landscape) and (max-height: 560px) and (min-height: 520px) {     /* surface duo */
+  .login-container { 
+    min-height: auto;      
+    padding: 12px 14px;    
+    margin: 20px auto;     
+    gap: 8px;  
+  }
+  .login-container input[type="text"],
+  .login-container input[type="password"] { 
+    height: 28px; 
+    font-size: 11px; 
+    padding: 6px 10px;
+    width: 80%;
+  }
+  .login-container form button[type="submit"] { 
+    height: 26px; 
+    font-size: 10px; 
+  }
+  .register-modal{ 
+    align-items: center; 
+    overflow: hidden; 
+    padding: 0; 
+  }
+  .register-content{
+    width: min(50vw, 300px);
+    padding: 8px 10px;
+    margin: 0 auto;
+    max-height: none;
+    overflow: hidden;
+    box-sizing: border-box;
+    gap: 8px;
+  }
+  .register-content input[type="email"],
+  .register-content input[type="tel"]{ 
+    height: 28px; 
+    font-size: 11px; 
+    padding: 6px 10px;
+    width: 80%;
+  }
+  .register-content form button[type="submit"]{ 
+    height: 26px; 
+    font-size: 11px; 
+    padding: 4px 8px;
+    width: 78%;
+    margin: 6px auto 0;
+  }
+  .register-content .error-message{
+    font-size: 11px;
+    padding: 6px 8px;
+    width: 80%;
+  }
+  .register-content form{ gap: 6px; }
+  .register-content input{ margin: 4px 0; }
+}
+
+@media (orientation: landscape) and (max-height: 500px) {    
+  .login-container {
+    width: 52vw;
+    max-width: 400px;
+    min-height: auto;
+    padding: 14px 16px;
+    gap: 10px;
+  }
+  .login-container h2 {
+    font-size: 20px;
+  }
+  .login-container input[type="text"],
+  .login-container input[type="password"] {
+    width: 90%;
+    max-width: 100%;
+    height: 28px;
+    padding: 6px 10px;
+    font-size: 11px;
+    line-height: 1.2;
+    box-sizing: border-box;
+    -webkit-appearance: none;
+    appearance: none;
+  }
+  .login-container form button[type="submit"] {
+    width: 100%;
+    max-width: 100%;
+    height: 26px;         
+    padding: 4px 8px;
+    font-size: 10px;
+    box-sizing: border-box;
+  }
+  .register-link {
+    font-size: 12px;
+  }
+  .register-modal{ 
+    align-items: center; 
+    overflow: hidden; 
+    padding: 0; 
+  }
+  .register-content{
+    width: min(52vw, 340px);
+    padding: 8px 10px;
+    margin: 0 auto;
+    max-height: none;
+    overflow: hidden;
+    box-sizing: border-box;
+    gap: 8px;
+  }
+  .register-content input[type="email"],
+  .register-content input[type="tel"]{ 
+    height: 28px; 
+    font-size: 11px;
+    padding: 6px 10px;
+    width: 90%; 
+  }
+  .register-content form button[type="submit"]{ 
+    height: 26px; 
+    font-size: 10px; 
+    padding: 4px 8px;
+    width: 76%;
+    margin: 6px auto 0;
+  }
+  .register-content .error-message{
+    font-size: 11px;
+    padding: 6px 8px;
+  }
+}
+
+/* landscape נמוך במיוחד */
+@media (orientation: landscape) and (max-height: 430px) {    /* iphone XR. iphone 14 pro max, pixel 7, galaxy  S20 ultra, galaxy A51/71 */
+  .login-container {
+    width: 48vw;
+    max-width: 360px;
+  }
+  .login-container input[type="text"],
+  .login-container input[type="password"] {
+    height: 26px;
+    font-size: 11px;
+    padding: 5px 8px;
+    width: 90%;
+ }
+  .register-modal{ 
+    align-items: center; 
+    overflow: hidden; 
+    padding: 0; 
+  }
+  .register-content{
+    width: min(50vw, 320px);
+    padding: 8px 10px;
+    margin: 0 auto;
+    max-height: none;
+    overflow: hidden;
+  }
+  .register-content input[type="email"],
+  .register-content input[type="tel"]{ 
+    height: 26px; 
+    font-size: 11px; 
+    padding: 5px 8px;
+    width: 90%;
+    box-sizing: border-box;
+    -webkit-appearance: none;
+    appearance: none;
+  }
+  .register-content form button[type="submit"]{ 
+    height: 26px; 
+    font-size: 11px; 
+    padding: 4px 6px;
+    width: 74%;
+    margin: 6px auto 0;
+  }
+  .register-content .error-message{
+    font-size: 10.5px;
+    padding: 5px 7px;
+    width: 90%;
+  }
+  .register-content form{ gap: 4px; }
+  .register-content input{ margin: 4px 0; }
+}
+
+@media (orientation: landscape) and (max-height: 390px) {     /* iphone SE, iphone 12 pro, galaxy 8+, galaxy Z fold */
+  .login-container {
+    width: 44vw;
+    max-width: 330px;
+    padding: 12px 14px;
+  }
+  .login-container h2 { 
+    font-size: 18px;
+  }
+  .login-container input[type="text"],
+  .login-container input[type="password"] { 
+    height: 26px;         
+    font-size: 11px; 
+    padding: 4px 6px;
+    width: 90%; 
+  }
+  .login-container form button[type="submit"] { 
+    height: 24px;         
+    font-size: 10px; 
+  }
+  .register-link { 
+    font-size: 11px; 
+  }
+  .register-modal{ 
+    align-items: center; 
+    overflow: hidden; 
+    padding: 0; 
+  }
+  .register-content{
+    width: min(48vw, 300px);
+    padding: 8px 10px;
+    margin: 0 auto;
+    max-height: none;
+    overflow: hidden;
+  }
+  .register-content input[type="email"],
+  .register-content input[type="tel"]{ 
+    height: 26px; 
+    font-size: 11px;
+    padding: 4px 6px;
+    width: 90%; 
+  }
+  .register-content form button[type="submit"]{ 
+    height: 22px; 
+    font-size: 11px; 
+    padding: 3px 6px;
+    width: 72%;
+    margin: 6px auto 0;
+  }
+  .register-content .error-message{
+    font-size: 10px;
+    padding: 4px 6px;
+    width: 90%;
+  }
+  .register-content form{ gap: 2px; }
+  .register-content input{ margin: 4px 0; }
+}
+
+/* התאמות ל־Foldables */
+@media (max-width: 720px) and (orientation: portrait) {
+  .login-container { width: 78vw; max-width: 320px; }
+}
+@media (min-width: 721px) and (max-width: 900px) and (orientation: portrait) {
+  .login-container { width: 68vw; max-width: 400px; }
+}

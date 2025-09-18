@@ -634,3 +634,564 @@ html, body { overflow-x: hidden; }
   border-radius: 12px;
   box-shadow: 0 10px 24px rgba(0,0,0,.12);
 }
+
+
+/* מצב מובייל */
+@media (max-width: 480px) and (orientation: portrait) {
+  html, body { overflow-y: auto !important; }
+  .area-header { 
+    position: fixed; 
+    top: 0; left: 0; 
+    right: 0; 
+    z-index: 20; 
+  }
+  .edit-area { padding-top: var(--header-h); }
+  .area-row {
+    display: block !important;
+    height: auto;
+    min-height: 100dvh;
+  }
+  .map-wrap {
+    width: 100%;
+    height: 100dvh;
+    margin-top: calc(-1 * var(--header-h));
+    border-radius: 0;
+    overflow: hidden;
+  }
+  .map {
+    margin: 0;
+    width: 100%;
+    height: 100%;
+    display: block;                
+    background: transparent;       
+  }
+  .map, .map-image, .map-wrap > * {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center center;
+    border-radius: 0;
+  }
+  .shade-panel {
+    width: 100%;
+    height: auto;
+    margin: 12px auto 20px;
+    padding: 12px 16px 8px; 
+    border-left: 0;
+    border-radius: 14px;
+    box-shadow: 0 12px 28px rgba(0,0,0,.14);
+    background: rgba(255,255,255,.96);
+  }
+  .panel-card {
+    margin-bottom: 6px;
+  }
+  .shade-form { gap: 8px; }
+  .shade-form input { 
+    height: 34px; 
+    font-size: 13px; 
+    padding: 6px 10px; 
+  }
+  .shade-form button { 
+    height: 34px; 
+    font-size: 13px; 
+    padding: 6px 12px; 
+  }
+  .panel-table-wrap {
+    max-height: 60vh;
+    overflow: auto;
+    margin-top: 8px;
+  }
+  .shade-table { font-size: 13px; }
+  .shade-row { padding: 6px 8px; }
+  .table-delete, .shade-delete { 
+    width: 30px; 
+    height: 30px; 
+    font-size: 15px; 
+  }
+  .panel-footer { 
+    position: static;
+    width: 100%;
+    background: transparent;
+    box-shadow: none;
+    display: flex;
+    direction: ltr;
+    justify-content: flex-end; 
+    align-items: center;    
+    padding: 0 2px 0 0;       
+    margin-top: 28px;
+    }
+  .panel-footer .button { 
+    width: auto;                          
+    min-width: 96px;
+    height: 32px;
+    padding: 0 12px;
+    font-size: 12px;
+    border-radius: 12px;
+  }
+}
+
+@media (min-width: 481px) and (max-width: 600px) and (orientation: portrait) {
+  html, body { overflow-y: auto !important; }
+  .area-header { 
+    position: fixed; 
+    top: 0; 
+    left: 0; 
+    right: 0; 
+    z-index: 20; 
+  }
+  .edit-area { padding-top: var(--header-h); }
+  .area-row {
+    display: block !important;
+    height: auto;
+    min-height: 100dvh;
+  }
+  .map-wrap {
+    width: 100%;
+    height: 100dvh;
+    margin-top: calc(-1 * var(--header-h));
+    border-radius: 0;
+    overflow: hidden;
+  }
+  .map {
+    margin: 0;
+    width: 100%;
+    height: 100%;
+    display: block;                
+    background: transparent;       
+  }
+  .map, .map-image, .map-wrap > * {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center center;
+    border-radius: 0;
+  }
+  .shade-panel {
+    width: 100%;
+    margin: 14px auto 18px;
+    padding: 14px 18px 8px;
+    border-left: 0;
+    border-radius: 14px;
+    box-shadow: 0 12px 28px rgba(0,0,0,.14);
+    background: rgba(255,255,255,.96);
+  }
+  .panel-card {   
+    margin-bottom: 8px;
+  }
+  .panel-table-wrap { 
+    max-height: 62vh;
+    overflow: auto;
+  }
+  .shade-form input { 
+    height: 36px; 
+    font-size: 14px; 
+    padding: 8px 12px; 
+  }
+  .shade-form button { 
+    height: 36px; 
+    font-size: 14px; 
+    padding: 8px 14px; 
+  }
+  .panel-footer{
+    position: static;
+    width: 100%;
+    background: transparent;
+    box-shadow: none;
+    display: flex;
+    direction: ltr;
+    justify-content: flex-end;
+    align-items: center;
+    padding: 0 4px 0 0; 
+    margin-top: 32px;
+  }
+  .panel-footer .button{
+    width: auto;
+    min-width: 100px;
+    height: 34px;
+    padding: 0 12px;
+    font-size: 12px;
+    border-radius: 12px;
+  }
+}
+
+@media (min-width: 601px) and (max-width: 900px) and (orientation: portrait) {
+  html, body { overflow-y: auto !important; }
+  .area-header {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 20;
+  }
+  .edit-area { padding-top: var(--header-h); }
+  .area-row {
+    display: block !important;
+    height: auto;
+    min-height: 100dvh;
+  }
+  .map-wrap {
+    width: 100%;
+    height: 100dvh;
+    margin-top: calc(-1 * var(--header-h));
+    border-radius: 0;
+    overflow: hidden;
+  }
+  .map {
+    margin: 0;
+    width: 100%;
+    height: 100%;
+    display: block;
+    background: transparent;
+  }
+  .map, .map-image, .map-wrap > * {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center center;
+    border-radius: 0;
+  }
+  .shade-panel {
+    width: 100%;
+    margin: 16px auto 24px;
+    padding: 18px 20px;
+    border-left: 0;
+    border-radius: 16px;
+    box-shadow: 0 12px 28px rgba(0,0,0,.14);
+    background: rgba(255,255,255,.96);
+    padding-bottom: 16px; 
+    margin-bottom: 12px;
+  }
+  .panel-table-wrap {
+    max-height: 62vh;
+    overflow: auto;
+  }
+  .panel-footer {
+    position: sticky;
+    right: 16px;
+    bottom: 0;
+    width: 100%;
+    z-index: 10;
+    padding: 10px 12px calc(10px + env(safe-area-inset-bottom));
+    margin: 0;
+    background: transparent;
+    box-shadow: none;
+    display: flex;
+    direction: ltr;
+    justify-content: flex-end;
+  }
+  .panel-footer .button{
+    min-width: 108px;
+    height: 34px;
+    font-size: 13px;
+    padding: 0 12px;
+    border-radius: 12px;
+  }
+}
+
+@media (min-width: 901px) and (max-width: 1100px) and (orientation: portrait) {
+  html, body { overflow-y: auto !important; }
+  .area-header {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 20;
+  }
+  .edit-area { padding-top: var(--header-h); }
+  .area-row {
+    display: block !important;
+    height: auto;
+    min-height: 100dvh;
+  }
+  .map-wrap {
+    width: 100%;
+    height: 100dvh;
+    margin-top: calc(-1 * var(--header-h));
+    border-radius: 0;
+    overflow: hidden;
+  }
+  .map, .map-image, .map-wrap > * {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center center;
+  }
+  .shade-panel {
+    width: 100%;
+    margin: 18px auto 28px;
+    padding: 20px 22px;
+    border-left: 0;
+    border-radius: 16px;
+    box-shadow: 0 12px 28px rgba(0,0,0,.14);
+    background: rgba(255,255,255,.96);
+    padding-bottom: 18px;
+    margin-bottom: 14px;
+  }
+  .panel-table-wrap {
+    max-height: 64vh;
+    overflow: auto;
+  }
+  .panel-footer{
+    position: sticky;
+    right: 18px;
+    bottom: 0;
+    width: 100%;
+    z-index: 10;
+    padding: 12px 14px calc(12px + env(safe-area-inset-bottom));
+    margin: 0;
+    background: transparent;
+    box-shadow: none;
+    display: flex;
+    direction: ltr;
+    justify-content: flex-end;
+  }
+  .panel-footer .button{
+    min-width: 118px;
+    height: 36px;
+    font-size: 14px;
+    padding: 0 14px;
+    border-radius: 12px;
+  }
+}
+
+/* התאמה למסך מסובב לפי גודל */
+@media (orientation: landscape) and (max-height: 560px) and (min-height: 520px) {
+  html, body{
+    height: auto !important;
+    min-height: 100dvh;
+    overflow-y: auto !important;   
+    overflow-x: hidden;
+  }
+  .App, .edit-area{
+    height: auto !important;
+    min-height: 100dvh;
+    overflow: visible !important;
+  }
+  .area-row {                      
+    display: block !important;
+    height: auto;
+    min-height: 100dvh;
+  }
+  .map-wrap {                    
+    width: 100%;
+    height: 100dvh;
+    margin-top: calc(-1 * var(--header-h));
+    border-radius: 0;
+    overflow: hidden;
+  }
+  .map, .map-image, .map-wrap > * {   
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center center;
+  }
+  .shade-panel {                      
+    width: 100%;
+    margin: 10px auto 14px;
+    padding: 12px 14px;
+    border-left: 0;
+    border-radius: 12px;
+    box-shadow: 0 10px 24px rgba(0,0,0,.12);
+    background: rgba(255,255,255,.96);
+  }
+  .shade-table thead th {            
+    font-size: 13px;
+    padding: 6px 8px;
+  }
+  .shade-table tbody td {             
+    font-size: 13px;
+    padding: 7px 8px;
+  }
+  .shade-table tbody tr { height: 50px; }
+  .shade-panel .panel-actions {       
+    gap: 6px;
+    margin: 8px 0 8px;
+    justify-content: center;
+  }
+  .shade-panel .panel-actions .button { 
+    height: 32px;
+    font-size: 12px;
+    padding: 0 12px;
+    min-width: 120px;
+    border-radius: 10px;
+  }
+  .panel-table-wrap {                 
+    max-height: 56vh;
+    overflow: auto;
+  }
+  .panel-footer {                     
+    position: sticky;
+    bottom: 0;
+    left: 0; right: 0;
+    width: 100%;
+    padding: 8px 16px calc(8px + env(safe-area-inset-bottom));
+    background: transparent;
+    box-shadow: none;
+    z-index: 25;
+    display: flex;
+    direction: ltr;
+    justify-content: flex-end;        
+  }
+  .panel-footer .button {             
+    height: 34px;
+    font-size: 12px;
+    padding: 0 12px;
+    border-radius: 10px;
+  }
+}
+
+@media (orientation: landscape) and (max-height: 430px) {
+  html, body { overflow-y: auto !important; }
+  .area-row {
+    display: block !important;
+    height: auto;
+    min-height: 100dvh;
+  }
+  .edit-area { 
+    --row-h: 46px; 
+    --thead-h: 40px; 
+  }
+  .panel-area-title { 
+    font-size: 18px; 
+    margin-bottom: 4px; 
+  }
+  .panel-area-desc { 
+    font-size: 12px;  
+    margin: 0 0 8px; 
+  }
+  .panel-card { border-radius: 10px; }
+  .panel-header { padding: 8px 8px; }
+  .panel-subtitle { 
+    font-size: 12px; 
+    padding: 6px 8px; 
+  }
+  .map-wrap {
+    width: 100%;
+    height: 100dvh;         
+    margin: 0;
+    border-radius: 0;
+    overflow: hidden;
+  }
+  .map, .map-image, .map-wrap > * {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center center;
+    border-radius: 0;
+  }
+  .shade-panel {
+    width: 100%;
+    margin: 4px auto 10px;
+    padding: 18px 20px;
+    border-left: 0;
+    border-radius: 12px;
+    box-shadow: 0 12px 28px rgba(0,0,0,.14);
+    background: rgba(255,255,255,.96);
+    padding-bottom: 50px;   
+  }
+  .shade-panel .panel-actions {
+    gap: 6px;
+    margin: 8px 0 10px;
+  }
+  .shade-panel .panel-actions .button {
+    height: 34px;
+    font-size: 13px;
+    padding: 0 12px;
+    min-width: 120px;
+    border-radius: 10px;
+  }
+  .shade-table { font-size: 13px; }
+  .shade-table thead th {
+    padding: 6px 6px;
+    font-size: 13px;
+  }
+  .shade-table tbody td {
+    padding: 6px 6px;
+    font-size: 13px;
+  }
+  .table-delete { padding: 2px 4px; }
+  .table-delete .trash-red svg { 
+    width: 14px; 
+    height: 14px; 
+  }
+  .panel-table-wrap {
+    max-height: 52vh;       
+    overflow: auto;
+  }
+  .panel-footer{
+    position: sticky;
+    right: 10px;
+    bottom: 0;
+    z-index: 10;
+    padding: 30px 0 calc(12px + env(safe-area-inset-bottom));;
+    margin: 0;
+    background: transparent;
+    box-shadow: none;
+    display: flex;
+    direction: ltr;
+    justify-content: flex-end;
+  }
+  .panel-footer .button{
+    min-width: 92px;
+    height: 32px;
+    font-size: 12.5px;
+    padding: 0 12px;
+    border-radius: 12px;
+  }
+}
+
+@media (orientation: landscape) and (max-height: 390px) {
+  .edit-area { 
+    --row-h: 46px; 
+    --thead-h: 40px; 
+  }
+  .panel-area-title { 
+    font-size: 18px; 
+    margin-bottom: 4px; 
+  }
+  .panel-area-desc { 
+    font-size: 12px; 
+    margin: 0 0 8px; 
+  }
+  .shade-panel {
+    margin: 6px auto 20px;
+    padding: 0 10px;
+    border-radius: 10px;
+    padding-bottom: 90px;   
+  }
+  .shade-panel .panel-actions .button {
+    height: 30px;
+    font-size: 11px;
+    padding: 0 8px;
+    min-width: 108px;
+  }
+  .panel-card { border-radius: 10px; }
+  .panel-header { padding: 8px 8px; }
+  .panel-subtitle { 
+    font-size: 12px; 
+    padding: 6px 8px; 
+  }
+  .shade-table { font-size: 13px; }
+  .shade-table thead th {
+    padding: 6px 6px;
+    font-size: 13px;
+  }
+  .shade-table tbody td {
+    padding: 6px 6px;
+    font-size: 13px;
+  }
+  .panel-table-wrap { max-height: 46vh; }
+  .table-delete { padding: 2px 4px; }
+  .table-delete .trash-red svg { 
+    width: 14px; 
+    height: 14px; 
+  }
+  .panel-footer{
+    position: sticky;
+    right: 8px;
+    bottom: max(8px, env(safe-area-inset-bottom));
+  }
+  .panel-footer .button{
+    min-width: 84px;
+    height: 30px;
+    font-size: 12px;
+    padding: 0 10px;
+    border-radius: 10px;
+  }
+}
