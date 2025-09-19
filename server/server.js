@@ -50,9 +50,17 @@ app.post("/api/login", async (req, res) => {
 });
 
 app.post("/api/register", async (req, res) => {
-  const { username, password } = req.body;
-  if (!username || !password)
-    return res.status(400).json({ error: "חובה למלא שם וסיסמה" });
+  let { username, password, email, phone } = req.body;
+
+  if (!username) return res.status(400).json({ error: "חובה למלא שם משתמש" });
+  if (!password) return res.status(400).json({ error: "חובה למלא סיסמה" });
+  if (!email) return res.status(400).json({ error: "חובה למלא כתובת מייל" });
+  if (!phone) return res.status(400).json({ error: "חובה למלא סיסמה" });
+
+  const emailRegex = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
+  if (!emailRegex.test(email)) {
+    return res.status(400).json({ error: "כתובת מייל אינה חוקית" });
+  }
 
   try {
     const [existing] = await db.query(
