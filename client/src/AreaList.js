@@ -228,7 +228,7 @@ function AreaList() {
               className="btn back-btn"
               onClick={() => setShowForm(false)}
             >
-              ← חזרה
+              → חזרה 
             </button>
             
             <button

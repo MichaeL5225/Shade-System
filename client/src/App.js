@@ -17,10 +17,15 @@ function App() {
   return (
     <Router>
       <Routes>
+<<<<<<< HEAD
         <Route path="/" element={<Login />} />
 
         {/* עמוד ההתחברות יהיה הראשון */}
         <Route path="/" element={<AreaList />} />
+=======
+         {/* עמוד ההתחברות יהיה הראשון */}
+        <Route path="/" element={<Login/>} />
+>>>>>>> 5ab153b6d10d8294fda34e6f1d1d4a700522744c
 
         {/* Route שמפנה לדף הראשי – כאן נציג את רשימת האזורים */}
         <Route path="/areaList" element={<AreaList />} />
