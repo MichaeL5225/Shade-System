@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import './Login.css';
+import "./Login.css";
 
 function Login() {
   const [username, setUsername] = useState("");
@@ -18,7 +18,7 @@ function Login() {
   const openRegister = () => {
     setRegUsername("");
     setRegPassword("");
-   setRegConfirm("");
+    setRegConfirm("");
     setRegEmail("");
     setRegPhone("");
     setRegError("");
@@ -47,7 +47,10 @@ function Login() {
       });
       const data = await response.json();
       if (data.success) {
-        localStorage.setItem('shade_username', (data?.username || username || '').trim());
+        localStorage.setItem(
+          "shade_username",
+          (data?.username || username || "").trim()
+        );
         navigate("/areaList");
       } else {
         setErrorMessage("שם משתמש או סיסמה לא נכונים!");
@@ -67,7 +70,7 @@ function Login() {
     const c = regConfirm.trim();
     const em = regEmail.trim();
     const ph = regPhone.trim();
-    
+
     if (!u || !p || !c || !em || !ph) {
       setRegError("יש למלא את כל הפרטים");
       return;
@@ -81,7 +84,12 @@ function Login() {
       const response = await fetch("http://localhost:5000/api/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username: u, password: p }),
+        body: JSON.stringify({
+          username: u,
+          password: p,
+          email: em,
+          phone: ph,
+        }),
       });
 
       const data = await response.json();
@@ -107,12 +115,12 @@ function Login() {
   // רקע מוגדר ב-JS
   const backgroundStyle = {
     backgroundImage: 'url("/HIT.jpg")',
-    backgroundSize: 'cover',
-    backgroundPosition: 'center',
-    minHeight: '100vh',
-    display: 'flex',
-    justifyContent: 'center',
-    alignItems: 'center'
+    backgroundSize: "cover",
+    backgroundPosition: "center",
+    minHeight: "100vh",
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
   };
 
   return (
@@ -176,10 +184,10 @@ function Login() {
                   onChange={(e) => setRegPhone(e.target.value)}
                 />
                 {regError && <div className="error-message">{regError}</div>}
-                <button type="submit">
-                  הרשם
+                <button type="submit">הרשם</button>
+                <button type="button" onClick={closeRegister}>
+                  ביטול
                 </button>
-                <button type="button" onClick={closeRegister}>ביטול</button>
               </form>
             </div>
           </div>

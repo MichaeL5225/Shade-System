@@ -50,30 +50,51 @@ app.post("/api/login", async (req, res) => {
 });
 
 app.post("/api/register", async (req, res) => {
-  let { username, password, email, phone } = req.body;
+  let username = (req.body?.username ?? "").toString().trim();
+  let password = (req.body?.password ?? "").toString().trim();
+  let email = (req.body?.email ?? "").toString().trim().toLowerCase();
+  let phone = (req.body?.phone ?? "").toString().trim();
 
   if (!username) return res.status(400).json({ error: "חובה למלא שם משתמש" });
   if (!password) return res.status(400).json({ error: "חובה למלא סיסמה" });
   if (!email) return res.status(400).json({ error: "חובה למלא כתובת מייל" });
-  if (!phone) return res.status(400).json({ error: "חובה למלא סיסמה" });
+  if (!phone) return res.status(400).json({ error: "חובה למלא מספר טלפון" });
 
+  // Email validation: must contain @ and then a dot after it
   const emailRegex = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
   if (!emailRegex.test(email)) {
     return res.status(400).json({ error: "כתובת מייל אינה חוקית" });
   }
 
+  // Phone validation: exactly 10 digits
+  const phoneRegex = /^\d{10}$/;
+  if (!phoneRegex.test(phone)) {
+    return res.status(400).json({ error: "מספר הפלאפון אינו חוקי" });
+  }
+
   try {
-    const [existing] = await db.query(
-      "SELECT * FROM users WHERE username = ?",
-      [username]
-    );
-    if (existing.length > 0)
+    const [u] = await db.query("SELECT 1 FROM users WHERE username=? LIMIT 1", [
+      username,
+    ]);
+    if (u.length)
       return res.json({ success: false, error: "שם המשתמש כבר קיים" });
 
-    await db.query("INSERT INTO users (username, password) VALUES (?, ?)", [
-      username,
-      password,
+    const [e] = await db.query("SELECT 1 FROM users WHERE email=? LIMIT 1", [
+      email,
     ]);
+    if (e.length)
+      return res.json({ success: false, error: "כבר קיים משתמש עם כתובת זו" });
+
+    const [p] = await db.query("SELECT 1 FROM users WHERE phone=? LIMIT 1", [
+      phone,
+    ]);
+    if (p.length)
+      return res.json({ success: false, error: "מספר הטלפון כבר קיים" });
+
+    await db.query(
+      "INSERT INTO users (username, password, email, phone) VALUES (?, ?, ?, ?)",
+      [username, password, email, phone]
+    );
     res.json({ success: true });
   } catch (err) {
     res.status(500).json({ error: err.message });
