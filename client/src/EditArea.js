@@ -11,7 +11,7 @@ const TrashIcon = ({ size = 16 }) => (
     fill="currentColor"
     aria-hidden="true"
   >
-    <path d="M9 3h6a1 1 0 0 1 1 1v1h4a1 1 0 1 1 0 2h-1v13a3 3 0 0 1-3 3H8a3 3 0 0 1-3-3V7H4a1 1 0 1 1 0-2h4V4a1 1 0 0 1 1-1Zm6 2V4H9v1h6ZM7 7v13a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V7H7Zm3 3a1 1 0 1 1 2 0v8a1 1 0 1 1-2 0v-8Zm4 0a1 1 0 1 1 2 0v8a1 1 0 1 1-2 0v-8Z"/>
+    <path d="M9 3h6a1 1 0 0 1 1 1v1h4a1 1 0 1 1 0 2h-1v13a3 3 0 0 1-3 3H8a3 3 0 0 1-3-3V7H4a1 1 0 1 1 0-2h4V4a1 1 0 0 1 1-1Zm6 2V4H9v1h6ZM7 7v13a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V7H7Zm3 3a1 1 0 1 1 2 0v8a1 1 0 1 1-2 0v-8Zm4 0a1 1 0 1 1 2 0v8a1 1 0 1 1-2 0v-8Z" />
   </svg>
 );
 
@@ -44,6 +44,51 @@ function EditArea() {
     else navigate("/");
   };
 
+  const imgRef = useRef(null);
+
+  const [imgMetrics, setImgMetrics] = useState({
+    naturalW: 0,
+    naturalH: 0,
+    clientW: 0,
+    clientH: 0,
+    offsetX: 0,
+    offsetY: 0,
+  });
+
+  const updateImageMetrics = () => {
+    const img = imgRef.current;
+    const map = mapRef.current;
+    if (!img || !map) return;
+
+    const imgRect = img.getBoundingClientRect();
+    const mapRect = map.getBoundingClientRect();
+
+    setImgMetrics({
+      naturalW: img.naturalWidth || 0,
+      naturalH: img.naturalHeight || 0,
+      clientW: imgRect.width,
+      clientH: imgRect.height,
+      offsetX: imgRect.left - mapRect.left,
+      offsetY: imgRect.top - mapRect.top,
+    });
+  };
+
+  const project = (natX, natY, natW, natH) => {
+    const { naturalW, naturalH, clientW, clientH, offsetX, offsetY } =
+      imgMetrics;
+    if (!naturalW || !naturalH) {
+      return { left: natX, top: natY, width: natW, height: natH };
+    }
+    const sx = clientW / naturalW;
+    const sy = clientH / naturalH;
+    return {
+      left: offsetX + (Number(natX) || 0) * sx,
+      top: offsetY + (Number(natY) || 0) * sy,
+      width: (Number(natW) || 0) * sx,
+      height: (Number(natH) || 0) * sy,
+    };
+  };
+
   useEffect(() => {
     axios
       .get(`/api/areas/name/${encodeURIComponent(name)}`)
@@ -55,6 +100,20 @@ function EditArea() {
       .then((res) => setShades(res.data))
       .catch((err) => console.error("שגיאה בטעינת הצללות:", err));
   }, [name]);
+
+  // ADD effect (anywhere with your other useEffects)
+  useEffect(() => {
+    const img = imgRef.current;
+    if (!img) return;
+
+    const ro = new ResizeObserver(() => updateImageMetrics());
+    ro.observe(img);
+
+    // initial measure
+    updateImageMetrics();
+
+    return () => ro.disconnect();
+  }, [areaData.path]);
 
   const handleToggleAdd = () => {
     setIsAdding((prev) => !prev);
@@ -69,26 +128,19 @@ function EditArea() {
   };
 
   const handleMapClick = (e) => {
-    if (!isAdding || !mapRef.current) return;
+    if (!isAdding || !mapRef.current || !imgRef.current) return;
 
-    const img = mapRef.current.querySelector("img.map-image");
-    if (!img) return;
-
+    const img = imgRef.current;
     const imgRect = img.getBoundingClientRect();
-    const mapRect = mapRef.current.getBoundingClientRect();
 
-    // image offset inside the map container
-    const offsetX = imgRect.left - mapRect.left;
-    const offsetY = imgRect.top - mapRect.top;
-
-    // click position inside the image box
+    // click within displayed image (pixels)
     const clickXInImg = e.clientX - imgRect.left;
     const clickYInImg = e.clientY - imgRect.top;
 
     const maxX = imgRect.width - newShade.width;
     const maxY = imgRect.height - newShade.height;
 
-    // clamp inside the image, then add the image→map offset
+    // center and clamp in displayed space
     const xWithinImg = Math.max(
       0,
       Math.min(clickXInImg - newShade.width / 2, maxX)
@@ -98,16 +150,27 @@ function EditArea() {
       Math.min(clickYInImg - newShade.height / 2, maxY)
     );
 
+    // displayed -> natural pixels
+    const scaleX = imgRect.width > 0 ? img.naturalWidth / imgRect.width : 1;
+    const scaleY = imgRect.height > 0 ? img.naturalHeight / imgRect.height : 1;
+
+    const natX = Math.round(xWithinImg * scaleX);
+    const natY = Math.round(yWithinImg * scaleY);
+    const natW = Math.round((newShade.width || 0) * scaleX);
+    const natH = Math.round((newShade.height || 0) * scaleY);
+
     setNewShade((prev) => ({
       ...prev,
-      x: Math.round(offsetX + xWithinImg),
-      y: Math.round(offsetY + yWithinImg),
+      x: natX,
+      y: natY,
+      width: natW,
+      height: natH,
     }));
   };
 
   const startEdit = () => {
     setEditMode(true);
-    setEditableShades(shades.map(s => ({ ...s })));
+    setEditableShades(shades.map((s) => ({ ...s })));
   };
 
   const cancelEdit = () => {
@@ -116,13 +179,17 @@ function EditArea() {
   };
 
   const handleAreaField = (key, value) => {
-    setAreaData(prev => ({ ...prev, [key]: value }));
+    setAreaData((prev) => ({ ...prev, [key]: value }));
   };
 
   const handleShadeField = (idx, key, value) => {
-    setEditableShades(prev => {
+    setEditableShades((prev) => {
       const next = [...prev];
-      next[idx] = { ...next[idx], [key]: key === "percentage" ? String(value).replace(/[^\d]/g, "") : value };
+      next[idx] = {
+        ...next[idx],
+        [key]:
+          key === "percentage" ? String(value).replace(/[^\d]/g, "") : value,
+      };
       return next;
     });
   };
@@ -130,22 +197,29 @@ function EditArea() {
   const saveEdit = async () => {
     try {
       // 1) עדכון פרטי האזור (שם/תיאור)
-      const areaPayload = { name: areaData.name, description: areaData.description };
-      await axios.put(`/api/areas/name/${encodeURIComponent(name)}`, areaPayload);
+      const areaPayload = {
+        name: areaData.name,
+        description: areaData.description,
+      };
+      await axios.put(
+        `/api/areas/name/${encodeURIComponent(name)}`,
+        areaPayload
+      );
 
       // 2) עדכון הצללות ששונו בלבד (שם=description, אחוז=percentage)
       const byId = new Map(shades.map((s, i) => [getId(s, i), s]));
       for (let i = 0; i < editableShades.length; i++) {
-        const cur  = editableShades[i];
-        const id   = getId(cur, i);
+        const cur = editableShades[i];
+        const id = getId(cur, i);
         const orig = byId.get(id);
         if (!orig) continue;
         const next = {};
-        const curPct  = cur.percentage ?? cur.Percentage ?? cur.percent;
+        const curPct = cur.percentage ?? cur.Percentage ?? cur.percent;
         const origPct = orig.percentage ?? orig.Percentage ?? orig.percent;
-        const curDesc  = cur.description ?? cur.Description ?? "";
+        const curDesc = cur.description ?? cur.Description ?? "";
         const origDesc = orig.description ?? orig.Description ?? "";
-        if (String(curPct ?? "") !== String(origPct ?? "")) next.percentage = Number(curPct) || 0;
+        if (String(curPct ?? "") !== String(origPct ?? ""))
+          next.percentage = Number(curPct) || 0;
         if (curDesc !== origDesc) next.description = curDesc;
         if (Object.keys(next).length > 0) {
           await axios.put(`/api/shades/${id}`, next);
@@ -153,9 +227,13 @@ function EditArea() {
       }
 
       // 3) רענון נתונים וסיום עריכה
-      const updatedArea   = await axios.get(`/api/areas/name/${encodeURIComponent(areaData.name)}`);
+      const updatedArea = await axios.get(
+        `/api/areas/name/${encodeURIComponent(areaData.name)}`
+      );
       setAreaData(updatedArea.data);
-      const updatedShades = await axios.get(`/api/shades/${encodeURIComponent(areaData.name)}`);
+      const updatedShades = await axios.get(
+        `/api/shades/${encodeURIComponent(areaData.name)}`
+      );
       setShades(updatedShades.data);
       setEditMode(false);
     } catch (err) {
@@ -172,7 +250,7 @@ function EditArea() {
 
     try {
       await axios.post("/api/shades", {
-        Area: name,
+        Area: areaData.name,
         percentage: parseFloat(percentage),
         description,
         x,
@@ -184,7 +262,7 @@ function EditArea() {
       setIsAdding(false);
 
       const updated = await axios.get(
-        `/api/shades/${encodeURIComponent(name)}`
+        `/api/shades/${encodeURIComponent(areaData.name)}`
       );
       setShades(updated.data);
     } catch (err) {
@@ -241,89 +319,116 @@ function EditArea() {
 
   return (
     <div className="edit-area">
-
       <div className="area-row">
         {/* MAP (unchanged inside) */}
         <div className="map-wrap">
           <div className="map" ref={mapRef} onClick={handleMapClick}>
             {areaData.path ? (
               <img
+                ref={imgRef} // ⬅️ add this
                 src={`/uploads/${areaData.path}`}
                 alt="Map"
                 className="map-image"
+                onLoad={updateImageMetrics} // ⬅️ and this
               />
             ) : (
               <p>🗺 כאן תופיע המפה שלך</p>
             )}
 
-            {displayShades.map((shade, i) => (
-              <div
-                key={getId(shade, i)}
-                className={`shade-marker ${
-                  hoveredId === getId(shade, i) ? "is-hovered" : ""
-                }`}
-                style={{
-                  left: `${shade.x}px`,
-                  top: `${shade.y}px`,
-                  width: `${shade.width}px`,
-                  height: `${shade.height}px`,
-                }}
-                onMouseEnter={() => setHoveredId(getId(shade, i))}
-                onMouseLeave={() => setHoveredId(null)}
-                onFocus={() => setHoveredId(getId(shade, i))}
-                onBlur={() => setHoveredId(null)}
-              >
-                <span
-                  className="shade-percent"
-                  style={getBadgeStyle(
-                    pick(shade, ["width", "Width"]),
-                    pick(shade, ["height", "Height"])
-                  )}
-                >
-                  {formatPercent(pick(shade, ["percentage", "Percentage"]))}
-                </span>
+            {displayShades.map((shade, i) => {
+              const natX = Number(pick(shade, ["x", "X"]));
+              const natY = Number(pick(shade, ["y", "Y"]));
+              const natW = Number(pick(shade, ["width", "Width"]));
+              const natH = Number(pick(shade, ["height", "Height"]));
+              const pos = project(natX, natY, natW, natH);
 
-                {/* עיגול לבן שמתמלא אפור לפי אחוז ההצללה */}
-                {(() => {
-                  const raw = pick(shade, ["percentage", "Percentage", "percent"]);
-                  const pct = Math.max(0, Math.min(100, Number(raw) || 0));
-                  return <div className="shade-dot" style={{ "--pct": pct }} />;
-                })()}
-                <button
-                  className="shade-delete"
-                  aria-label="מחק הצללה"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleDeleteShade(shade);
+              return (
+                <div
+                  key={getId(shade, i)}
+                  className={`shade-marker ${
+                    hoveredId === getId(shade, i) ? "is-hovered" : ""
+                  }`}
+                  style={{
+                    left: `${pos.left}px`,
+                    top: `${pos.top}px`,
+                    width: `${pos.width}px`,
+                    height: `${pos.height}px`,
                   }}
-                  title="מחק"
+                  onMouseEnter={() => setHoveredId(getId(shade, i))}
+                  onMouseLeave={() => setHoveredId(null)}
+                  onFocus={() => setHoveredId(getId(shade, i))}
+                  onBlur={() => setHoveredId(null)}
+                  tabIndex={0}
                 >
-                  <span className="trash-red"><TrashIcon size={14} /></span>
-                </button>
-              </div>
-            ))}
-
-            {isAdding && newShade.x !== null && newShade.y !== null && (
-              <div
-                className="shade-marker"
-                style={{
-                  left: `${newShade.x}px`,
-                  top: `${newShade.y}px`,
-                  width: `${newShade.width}px`,
-                  height: `${newShade.height}px`,
-                }}
-              >
-                {newShade.percentage !== "" && (
                   <span
                     className="shade-percent"
-                    style={getBadgeStyle(newShade.width, newShade.height)}
+                    style={getBadgeStyle(pos.width, pos.height)}
                   >
-                    {formatPercent(newShade.percentage)}
+                    {formatPercent(pick(shade, ["percentage", "Percentage"]))}
                   </span>
-                )}
-                 <div className="shade-dot" style={{ "--pct": Number(newShade.percentage) || 0 }} />
-              </div>
-            )}
+                  {(() => {
+                    const raw = pick(shade, [
+                      "percentage",
+                      "Percentage",
+                      "percent",
+                    ]);
+                    const pct = Math.max(0, Math.min(100, Number(raw) || 0));
+                    return (
+                      <div className="shade-dot" style={{ "--pct": pct }} />
+                    );
+                  })()}
+                  <button
+                    className="shade-delete"
+                    aria-label="מחק הצללה"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleDeleteShade(shade);
+                    }}
+                    title="מחק"
+                  >
+                    <span className="trash-red">
+                      <TrashIcon size={14} />
+                    </span>
+                  </button>
+                </div>
+              );
+            })}
+
+            {isAdding &&
+              newShade.x != null &&
+              newShade.y != null &&
+              (() => {
+                const pos = project(
+                  newShade.x,
+                  newShade.y,
+                  newShade.width,
+                  newShade.height
+                );
+                return (
+                  <div
+                    className="shade-marker"
+                    style={{
+                      left: `${pos.left}px`,
+                      top: `${pos.top}px`,
+                      width: `${pos.width}px`,
+                      height: `${pos.height}px`,
+                    }}
+                  >
+                    {newShade.percentage !== "" && (
+                      <span
+                        className="shade-percent"
+                        style={getBadgeStyle(pos.width, pos.height)}
+                      >
+                        {formatPercent(newShade.percentage)}
+                      </span>
+                    )}
+                    <div
+                      className="shade-dot"
+                      style={{ "--pct": Number(newShade.percentage) || 0 }}
+                    />
+                  </div>
+                );
+              })()}
           </div>
         </div>
 
@@ -346,10 +451,15 @@ function EditArea() {
                 onChange={(e) => handleAreaField("description", e.target.value)}
               />
               <div className="panel-actions">
-                <button className="button" onClick={saveEdit}> שמור</button>
-                <button className="button" onClick={cancelEdit}>בטל</button>
-             </div>
-           </>
+                <button className="button" onClick={saveEdit}>
+                  {" "}
+                  שמור
+                </button>
+                <button className="button" onClick={cancelEdit}>
+                  בטל
+                </button>
+              </div>
+            </>
           ) : (
             <>
               <div className="panel-area-info">
@@ -358,8 +468,17 @@ function EditArea() {
               </div>
               {!isAdding && (
                 <div className="panel-actions">
-                  <button className="button button-primary" onClick={startEdit}> עריכת אזור</button>
-                  <button className="button button-primary" onClick={handleToggleAdd}> הוספת הצללה</button>
+                  <button className="button button-primary" onClick={startEdit}>
+                    {" "}
+                    עריכת אזור
+                  </button>
+                  <button
+                    className="button button-primary"
+                    onClick={handleToggleAdd}
+                  >
+                    {" "}
+                    הוספת הצללה
+                  </button>
                 </div>
               )}
             </>
@@ -406,7 +525,10 @@ function EditArea() {
                   placeholder="רוחב"
                   value={newShade.width}
                   onChange={(e) =>
-                    setNewShade({ ...newShade, width: parseInt(e.target.value) })
+                    setNewShade({
+                      ...newShade,
+                      width: parseInt(e.target.value),
+                    })
                   }
                 />
                 <input
@@ -414,11 +536,20 @@ function EditArea() {
                   placeholder="גובה"
                   value={newShade.height}
                   onChange={(e) =>
-                    setNewShade({ ...newShade, height: parseInt(e.target.value) })
+                    setNewShade({
+                      ...newShade,
+                      height: parseInt(e.target.value),
+                    })
                   }
                 />
-                <button className="button" onClick={handleSaveShade}> שמור </button>
-                <button className="button" onClick={handleToggleAdd}> בטל</button>
+                <button className="button" onClick={handleSaveShade}>
+                  {" "}
+                  שמור{" "}
+                </button>
+                <button className="button" onClick={handleToggleAdd}>
+                  {" "}
+                  בטל
+                </button>
               </div>
             </div>
           )}
@@ -428,9 +559,10 @@ function EditArea() {
               <h3>הצללות</h3>
             </div>
             <div className="panel-subtitle">
-              מספר ההצללות באזור – {(editMode ? editableShades.length : shades.length)}
+              מספר ההצללות באזור –{" "}
+              {editMode ? editableShades.length : shades.length}
             </div>
-             
+
             <div className="panel-table-wrap">
               <table className="shade-table">
                 <thead>
@@ -449,8 +581,9 @@ function EditArea() {
                     </tr>
                   ) : (
                     (editMode ? editableShades : shades).map((s, idx) => {
-                      const desc = pick(s, ["description", "Description"]) ?? "";
-                      const pct  = pick(s, ["percentage", "Percentage"]);
+                      const desc =
+                        pick(s, ["description", "Description"]) ?? "";
+                      const pct = pick(s, ["percentage", "Percentage"]);
                       return (
                         <tr
                           key={getId(s, idx)}
@@ -469,7 +602,11 @@ function EditArea() {
                                 className="shade-input"
                                 value={desc}
                                 onChange={(e) =>
-                                  handleShadeField(idx, "description", e.target.value)
+                                  handleShadeField(
+                                    idx,
+                                    "description",
+                                    e.target.value
+                                  )
                                 }
                               />
                             ) : (
@@ -485,7 +622,11 @@ function EditArea() {
                                 className="percent-input"
                                 value={pct ?? ""}
                                 onChange={(e) =>
-                                  handleShadeField(idx, "percentage", e.target.value)
+                                  handleShadeField(
+                                    idx,
+                                    "percentage",
+                                    e.target.value
+                                  )
                                 }
                               />
                             ) : (
@@ -500,7 +641,9 @@ function EditArea() {
                               onClick={() => handleDeleteShade(s)}
                               disabled={editMode}
                             >
-                              <span className="trash-red"><TrashIcon /></span>
+                              <span className="trash-red">
+                                <TrashIcon />
+                              </span>
                             </button>
                           </td>
                         </tr>
@@ -513,7 +656,10 @@ function EditArea() {
           </div>
           {/* כפתור חזרה – מתחת לטבלה */}
           <div className="panel-footer">
-            <button className="button" onClick={handleBack}> חזרה</button>
+            <button className="button" onClick={handleBack}>
+              {" "}
+              חזרה
+            </button>
           </div>
         </aside>
       </div>
