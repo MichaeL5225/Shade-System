@@ -1,3 +1,4 @@
+// ===== ייבוא ספריות והגדרות בסיס =====
 const express = require("express");
 const cors = require("cors");
 const path = require("path");
@@ -8,6 +9,7 @@ const db = require("./db"); // Pool של MySQL2
 const app = express();
 const PORT = 5000;
 
+// ===== תיקיית העלאות =====
 const UPLOADS_DIR = path.join(__dirname, "uploads");
 if (!fs.existsSync(UPLOADS_DIR)) {
   fs.mkdirSync(UPLOADS_DIR, { recursive: true });
@@ -28,7 +30,7 @@ const storage = multer.diskStorage({
 });
 const upload = multer({ storage });
 
-// ================= login/register =================
+// ================= התחברות / הרשמה =================
 app.post("/api/login", async (req, res) => {
   const { username, password } = req.body;
   if (!username || !password)
@@ -49,6 +51,7 @@ app.post("/api/login", async (req, res) => {
   }
 });
 
+// ולידציות בסיסיות ומניעת כפילויות
 app.post("/api/register", async (req, res) => {
   let username = (req.body?.username ?? "").toString().trim();
   let password = (req.body?.password ?? "").toString().trim();
@@ -60,19 +63,20 @@ app.post("/api/register", async (req, res) => {
   if (!email) return res.status(400).json({ error: "חובה למלא כתובת מייל" });
   if (!phone) return res.status(400).json({ error: "חובה למלא מספר טלפון" });
 
-  // Email validation: must contain @ and then a dot after it
+  // כתובת מייל - מחייבת @ ואז נקודה
   const emailRegex = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
   if (!emailRegex.test(email)) {
     return res.status(400).json({ error: "כתובת מייל אינה חוקית" });
   }
 
-  // Phone validation: exactly 10 digits
+  // טלפון - בדיוק 10 ספרות
   const phoneRegex = /^\d{10}$/;
   if (!phoneRegex.test(phone)) {
     return res.status(400).json({ error: "מספר הפלאפון אינו חוקי" });
   }
 
   try {
+    // מניעת כפילויות
     const [u] = await db.query("SELECT 1 FROM users WHERE username=? LIMIT 1", [
       username,
     ]);
@@ -122,6 +126,7 @@ app.post("/api/areas/upload", upload.single("path"), async (req, res) => {
   }
 });
 
+// רשימת כל האזורים
 app.get("/api/areas", async (req, res) => {
   try {
     const [results] = await db.query("SELECT * FROM areas");
@@ -131,6 +136,7 @@ app.get("/api/areas", async (req, res) => {
   }
 });
 
+// אזור לפי שם 
 app.get("/api/areas/name/:name", async (req, res) => {
   try {
     const areaName = decodeURIComponent(req.params.name);
@@ -145,6 +151,7 @@ app.get("/api/areas/name/:name", async (req, res) => {
   }
 });
 
+// עדכון אזור
 app.put("/api/areas/name/:name", upload.single("path"), async (req, res) => {
   try {
     const { name, description } = req.body;
@@ -187,6 +194,7 @@ app.put("/api/areas/name/:name", upload.single("path"), async (req, res) => {
   }
 });
 
+// מחיקת אזור – מוחק גם את התמונה והצללות שקשורות אליו
 app.delete("/api/areas/name/:name", async (req, res) => {
   try {
     const areaName = decodeURIComponent(req.params.name);
@@ -241,6 +249,7 @@ app.post("/api/shades", async (req, res) => {
   }
 });
 
+// כל ההצללות לפי שם אזור
 app.get("/api/shades/:name", async (req, res) => {
   try {
     const areaName = decodeURIComponent(req.params.name);
@@ -254,6 +263,7 @@ app.get("/api/shades/:name", async (req, res) => {
   }
 });
 
+// עדכון הצללה
 app.put("/api/shades/:id", async (req, res) => {
   try {
     const { width, height, percentage, description, x, y } = req.body;
@@ -299,6 +309,7 @@ app.put("/api/shades/:id", async (req, res) => {
   }
 });
 
+// מחיקת הצללה לפי מזהה
 app.delete("/api/shades/:id", async (req, res) => {
   try {
     await db.query("DELETE FROM shades WHERE id = ?", [req.params.id]);

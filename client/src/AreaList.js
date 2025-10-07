@@ -17,25 +17,29 @@ function AreaList() {
   const [preview, setPreview] = useState(null);
   const fileInputRef = useRef(null);
 
+  // טעינת שם משתמש שנשמר ב-localStorage 
   useEffect(() => {
     setUsername(localStorage.getItem('shade_username') || '');
   }, []);
 
+  // הבאת רשימת אזורים מהשרת עם טעינת הדף
   useEffect(() => {
     axios.get('/api/areas')
       .then(res => setAreas(res.data))
       .catch(err => console.error('שגיאה בקבלת אזורים:', err));
   }, []);
 
+  // ניקוי URL של תצוגת התמונה המקדימה בעת יציאה/החלפה
   useEffect(() => {
   return () => {
     if (preview) URL.revokeObjectURL(preview);
   };
 }, [preview]);
 
-
+  // הצגת/הסתרת טופס הוספת אזור
   const toggleForm = () => { setShowForm(!showForm); };
 
+  // שליחת טופס הוספת אזור: ולידציה בסיסית + העלאת תמונה ב-FormData
   const handleAddArea = () => {
     const { name, description } = newArea;
     if (!name || !description || !pathFile) return alert('חובה למלא את כל השדות ולהעלות תמונה');
@@ -66,12 +70,14 @@ function AreaList() {
       });
   };
 
+  // מחיקת אזורים מסומנים (בבת אחת)
   const handleDeleteSelected = () => {
     Promise.all(selectedAreas.map(name => axios.delete(`/api/areas/name/${encodeURIComponent(name)}`)))
       .then(() => { setAreas(areas.filter(area => !selectedAreas.includes(area.name))); setSelectedAreas([]); setDeleteMode(false); })
       .catch(err => console.error('שגיאה במחיקה:', err));
   };
 
+  // מחיקת אזור בודד לאחר אישור
   const handleDeleteSingle = async (name) => {
     const ok = window.confirm(`האם את/ה בטוח/ה שברצונך למחוק את האזור "${name}"?`);
     if (!ok) return;
@@ -84,8 +90,10 @@ function AreaList() {
     }
   };
 
+  // סינון אזורים לפי חיפוש
   const filteredAreas = areas.filter(area => area.name.toLowerCase().includes(searchTerm.toLowerCase()));
 
+  // טיפול בבחירת קובץ + יצירת תצוגה מקדימה
   const handleFileChange = (e) => {
     const file = e.target.files?.[0] || null;
 
@@ -101,24 +109,25 @@ function AreaList() {
     }
   };
 
-
   return (
     <div
       className="App"
       style={{
-        backgroundImage: "url('/HIT.jpg')", // 👈 פה הרקע
+        backgroundImage: "url('/HIT.jpg')", 
         backgroundSize: "cover",
         backgroundPosition: "center",
         minHeight: "100vh"
       }}
     >
 
+      {/* פס עליון: ברכת שלום עם שם המשתמש */}
       <div className="welcome-strip">
         <div className="welcome-inner">
           ברוך הבא{username ? `, ${username}` : ''} 
         </div>
       </div>
       
+    {/* אזור ניהול וחיפוש אזורים */}
     {!showForm && (
       <section className="hero">
       <div className="hero-card">
@@ -126,6 +135,7 @@ function AreaList() {
 
         <div className="hero-actions">
           <div className="areas-panel">
+            {/* חיפוש אזור לפי שם */}
             <input
               type="text"
               placeholder="חיפוש..."
@@ -134,6 +144,7 @@ function AreaList() {
               className="search-bar"
             />
 
+            {/* רשימת אזורים/מצב ריק */}
             {filteredAreas.length === 0 ? (
               <div className="empty-state">
                 {searchTerm ? "לא נמצאו אזורים" : "לא נוספו אזורים"}
@@ -157,6 +168,7 @@ function AreaList() {
               ))
             )}
 
+            {/* פעולת מחיקה מרוכזת */}
             {deleteMode && selectedAreas.length > 0 && (
               <div className="panel-actions">
                 <button className="btn delete small" onClick={handleDeleteSelected}>
@@ -175,8 +187,7 @@ function AreaList() {
     </section>
   )}
 
-
-
+      {/* טופס הוספת אזור חדש */}
       {showForm && (
         <div className="form-container">
 
@@ -218,6 +229,7 @@ function AreaList() {
             )}
           </div>
 
+          {/* תצוגה מקדימה לתמונה שנבחרה */}
           {preview && (
             <img src={preview} alt="תצוגה מקדימה" className="image-preview" />
           )}

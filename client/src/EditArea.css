@@ -1,4 +1,3 @@
-/* ===== EditArea (דף עריכת אזור) – CLEAN ===== */
 :root{
   --header-h: 64px;
   --footer-h: 96px;
@@ -55,7 +54,7 @@ html, body { margin: 0; overflow-x: hidden; }
 .shade-marker:hover .shade-percent,
 .shade-marker:focus-within .shade-percent{ display:block; }
 
-/* “ירח” */
+/* צורת ההצללה - ירח */
 .shade-dot{
   position:relative; overflow:hidden; width:100%; height:100%;
   border-radius:50%; box-sizing:border-box;
@@ -97,7 +96,7 @@ html, body { margin: 0; overflow-x: hidden; }
   font-weight:800; cursor:pointer; transition:.2s ease; box-shadow:0 10px 24px rgba(0,0,0,.12);
 }
 .button:hover{ filter:brightness(1.05); transform:translateY(-1px); }
-.button-primary{ /* לשימור הקלאס בקוד – זהה לבסיס */ }
+.button-primary{}
 
 /* וריאציית hover בתוך הפאנל/טופס */
 .shade-panel .panel-actions .button:hover,
@@ -161,7 +160,7 @@ html, body { margin: 0; overflow-x: hidden; }
 .table-delete:focus-visible{ outline:2px solid #0f62fe; outline-offset:2px; }
 .table-delete:disabled{ opacity:.45; cursor:not-allowed; }
 
-/* ===== טופס הוספת הצללה (דביק בראש הפאנל) ===== */
+/* ===== טופס הוספת הצללה ===== */
 .panel-sticky{ position:sticky; top:0; z-index:2; background:#fff; border-bottom:1px solid #e9eef5; }
 .shade-form{
   background:linear-gradient(180deg,#fff7f2 0%, #fff1ec 100%);
@@ -190,7 +189,7 @@ html, body { margin: 0; overflow-x: hidden; }
   color:#fff; filter:brightness(1.06); transform:translateY(-1px);
 }
 
-/* ===== מובייל – כללי משותף לדיוק עיצוב ===== */
+/* ===== מצב מובייל  ===== */
 @media (orientation:portrait) and (max-width:1100px){
   html, body{ overflow-y:auto !important; }
   .area-row{ display:block !important; height:auto; min-height:100dvh; }

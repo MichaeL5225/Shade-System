@@ -3,6 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
 import "./EditArea.css";
 
+// אייקון פח למחיקה
 const TrashIcon = ({ size = 16 }) => (
   <svg
     width={size}
@@ -46,6 +47,7 @@ function EditArea() {
 
   const imgRef = useRef(null);
 
+  // מדדי תמונה מוצגת לעומת גודל טבעי (לתרגום קואורדינטות)
   const [imgMetrics, setImgMetrics] = useState({
     naturalW: 0,
     naturalH: 0,
@@ -55,6 +57,7 @@ function EditArea() {
     offsetY: 0,
   });
 
+  // עדכון מדדים מתוך DOM
   const updateImageMetrics = () => {
     const img = imgRef.current;
     const map = mapRef.current;
@@ -73,6 +76,7 @@ function EditArea() {
     });
   };
 
+  // המרת קואורדינטות טבעיות למרחב התצוגה
   const project = (natX, natY, natW, natH) => {
     const { naturalW, naturalH, clientW, clientH, offsetX, offsetY } =
       imgMetrics;
@@ -89,6 +93,7 @@ function EditArea() {
     };
   };
 
+  // טעינת נתוני אזור + הצללות מהשרת
   useEffect(() => {
     axios
       .get(`/api/areas/name/${encodeURIComponent(name)}`)
@@ -101,7 +106,7 @@ function EditArea() {
       .catch((err) => console.error("שגיאה בטעינת הצללות:", err));
   }, [name]);
 
-  // ADD effect (anywhere with your other useEffects)
+  // מעקב אחרי שינויי גודל תמונה לצורך חישובי מיקום מדוייקים
   useEffect(() => {
     const img = imgRef.current;
     if (!img) return;
@@ -115,6 +120,7 @@ function EditArea() {
     return () => ro.disconnect();
   }, [areaData.path]);
 
+  // החלפת מצב "הוספת הצללה" ואיפוס טופס ההוספה
   const handleToggleAdd = () => {
     setIsAdding((prev) => !prev);
     setNewShade({
@@ -127,20 +133,21 @@ function EditArea() {
     });
   };
 
+  // קליק על המפה: חישוב נקודת ההנחה ביחס לתמונה המוצגת + המרה לטבעי
   const handleMapClick = (e) => {
     if (!isAdding || !mapRef.current || !imgRef.current) return;
 
     const img = imgRef.current;
     const imgRect = img.getBoundingClientRect();
 
-    // click within displayed image (pixels)
+    // מיקום הקליק בפיקסלים על התמונה המוצגת
     const clickXInImg = e.clientX - imgRect.left;
     const clickYInImg = e.clientY - imgRect.top;
 
     const maxX = imgRect.width - newShade.width;
     const maxY = imgRect.height - newShade.height;
 
-    // center and clamp in displayed space
+    // מיקום סופי
     const xWithinImg = Math.max(
       0,
       Math.min(clickXInImg - newShade.width / 2, maxX)
@@ -150,7 +157,7 @@ function EditArea() {
       Math.min(clickYInImg - newShade.height / 2, maxY)
     );
 
-    // displayed -> natural pixels
+    // // המרה מפיקסלים מוצגים לפיקסלים טבעיים של התמונה
     const scaleX = imgRect.width > 0 ? img.naturalWidth / imgRect.width : 1;
     const scaleY = imgRect.height > 0 ? img.naturalHeight / imgRect.height : 1;
 
@@ -178,10 +185,12 @@ function EditArea() {
     setEditableShades([]);
   };
 
+  // עדכון שדות האזור בטופס העריכה
   const handleAreaField = (key, value) => {
     setAreaData((prev) => ({ ...prev, [key]: value }));
   };
 
+  // עדכון שדה בהצללה מסויימת בטבלת העריכה
   const handleShadeField = (idx, key, value) => {
     setEditableShades((prev) => {
       const next = [...prev];
@@ -194,9 +203,9 @@ function EditArea() {
     });
   };
 
+  // שמירת עריכה 
   const saveEdit = async () => {
     try {
-      // 1) עדכון פרטי האזור (שם/תיאור)
       const areaPayload = {
         name: areaData.name,
         description: areaData.description,
@@ -206,7 +215,6 @@ function EditArea() {
         areaPayload
       );
 
-      // 2) עדכון הצללות ששונו בלבד (שם=description, אחוז=percentage)
       const byId = new Map(shades.map((s, i) => [getId(s, i), s]));
       for (let i = 0; i < editableShades.length; i++) {
         const cur = editableShades[i];
@@ -226,7 +234,6 @@ function EditArea() {
         }
       }
 
-      // 3) רענון נתונים וסיום עריכה
       const updatedArea = await axios.get(
         `/api/areas/name/${encodeURIComponent(areaData.name)}`
       );
@@ -242,6 +249,7 @@ function EditArea() {
     }
   };
 
+  // הוספת הצללה חדשה
   const handleSaveShade = async () => {
     const { percentage, description, x, y, width, height } = newShade;
     if (!percentage || !description || x === null || y === null) {
@@ -271,6 +279,7 @@ function EditArea() {
     }
   };
 
+  // מחיקת הצללה
   const handleDeleteShade = async (idLike) => {
     const id = idLike?.id ?? idLike?.ID ?? idLike; // be tolerant to API field names
     if (!id) return alert("אין מזהה להצללה למחיקה");
@@ -320,7 +329,7 @@ function EditArea() {
   return (
     <div className="edit-area">
       <div className="area-row">
-        {/* MAP (unchanged inside) */}
+        {/* מפת האזור עם שכבת ההצללות */}
         <div className="map-wrap">
           <div className="map" ref={mapRef} onClick={handleMapClick}>
             {areaData.path ? (
@@ -394,6 +403,7 @@ function EditArea() {
               );
             })}
 
+            {/* תצוגה  של הצללה חדשה (במצב הוספה) */}
             {isAdding &&
               newShade.x != null &&
               newShade.y != null &&
@@ -432,7 +442,7 @@ function EditArea() {
           </div>
         </div>
 
-        {/* RIGHT: SHADES TABLE (single instance) */}
+        {/* פאנל ימני: פרטי אזור, פעולות, טופס הוספה וטבלת הצללות */}
         <aside className="shade-panel" aria-label="טבלת הצללות">
           {/* פרטי אזור + מצב עריכה */}
           {editMode ? (
@@ -484,7 +494,7 @@ function EditArea() {
             </>
           )}
 
-          {/* טופס הוספת הצללה – בתוך הפאנל ובראשו (דביק) */}
+          {/* טופס הוספת הצללה בתוך הפאנל */}
           {isAdding && (
             <div className="panel-sticky">
               <div className="shade-form">
@@ -654,6 +664,7 @@ function EditArea() {
               </table>
             </div>
           </div>
+          
           {/* כפתור חזרה – מתחת לטבלה */}
           <div className="panel-footer">
             <button className="button" onClick={handleBack}>

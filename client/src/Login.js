@@ -15,6 +15,7 @@ function Login() {
   const [regError, setRegError] = useState("");
   const navigate = useNavigate();
 
+  // פתיחת חלון הרשמה – איפוס שדות ושגיאות
   const openRegister = () => {
     setRegUsername("");
     setRegPassword("");
@@ -25,6 +26,8 @@ function Login() {
     setErrorMessage("");
     setShowRegister(true);
   };
+
+  // סגירת חלון הרשמה – איפוס מלא
   const closeRegister = () => {
     setShowRegister(false);
     setRegUsername("");
@@ -35,6 +38,7 @@ function Login() {
     setRegError("");
   };
 
+  // שליחת טופס התחברות – בקשה לשרת, שמירת שם משתמש ב-localStorage וניווט
   const handleLogin = async (e) => {
     e.preventDefault();
     setErrorMessage("");
@@ -61,10 +65,12 @@ function Login() {
     }
   };
 
+  // שליחת טופס הרשמה – ולידציה בסיסית בצד לקוח + בקשה לשרת
   const handleRegister = async (e) => {
     e.preventDefault();
     setErrorMessage("");
     setRegError("");
+
     const u = regUsername.trim();
     const p = regPassword.trim();
     const c = regConfirm.trim();
@@ -94,6 +100,7 @@ function Login() {
 
       const data = await response.json();
       if (data.success) {
+        // איפוס וסגירה לאחר הרשמה מוצלחת
         window.alert("ההרשמה הצליחה! אפשר להתחבר עכשיו.");
         setShowRegister(false);
         setRegUsername("");
@@ -112,7 +119,7 @@ function Login() {
     }
   };
 
-  // רקע מוגדר ב-JS
+  // תמונת רקע
   const backgroundStyle = {
     backgroundImage: 'url("/HIT.jpg")',
     backgroundSize: "cover",
@@ -127,6 +134,8 @@ function Login() {
     <div style={backgroundStyle}>
       <div className="login-container">
         <h2>התחברות</h2>
+
+        {/* טופס התחברות */}
         <form onSubmit={handleLogin}>
           <input
             type="text"
@@ -144,10 +153,12 @@ function Login() {
           <button type="submit">התחבר</button>
         </form>
 
+        {/* קישור לפתיחת חלון הרשמה */}
         <div className="register-link" onClick={openRegister}>
           לא רשום עדיין? הירשם עכשיו
         </div>
 
+        {/* טופס הרשמה */}
         {showRegister && (
           <div className="register-modal">
             <div className="register-content">
