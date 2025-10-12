@@ -1,18 +1,48 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import "./Login.css";
 
 function Login() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
-  const [showRegister, setShowRegister] = useState(false); // האם להציג את המודל
+  const [regEmail, setRegEmail] = useState("");
+  const [regPhone, setRegPhone] = useState("");
+  const [errorMessage, setErrorMessage] = useState("");
+  const [showRegister, setShowRegister] = useState(false);
   const [regUsername, setRegUsername] = useState("");
   const [regPassword, setRegPassword] = useState("");
   const [regConfirm, setRegConfirm] = useState("");
+  const [regError, setRegError] = useState("");
   const navigate = useNavigate();
 
-  // התחברות
+  // פתיחת חלון הרשמה – איפוס שדות ושגיאות
+  const openRegister = () => {
+    setRegUsername("");
+    setRegPassword("");
+    setRegConfirm("");
+    setRegEmail("");
+    setRegPhone("");
+    setRegError("");
+    setErrorMessage("");
+    setShowRegister(true);
+  };
+
+  // סגירת חלון הרשמה – איפוס מלא
+  const closeRegister = () => {
+    setShowRegister(false);
+    setRegUsername("");
+    setRegPassword("");
+    setRegConfirm("");
+    setRegEmail("");
+    setRegPhone("");
+    setRegError("");
+  };
+
+  // שליחת טופס התחברות – בקשה לשרת, שמירת שם משתמש ב-localStorage וניווט
   const handleLogin = async (e) => {
     e.preventDefault();
+    setErrorMessage("");
+
     try {
       const response = await fetch("http://localhost:5000/api/login", {
         method: "POST",
@@ -21,24 +51,38 @@ function Login() {
       });
       const data = await response.json();
       if (data.success) {
+        localStorage.setItem(
+          "shade_username",
+          (data?.username || username || "").trim()
+        );
         navigate("/areaList");
       } else {
-        alert("שם משתמש או סיסמה לא נכונים!");
+        setErrorMessage("שם משתמש או סיסמה לא נכונים!");
       }
     } catch (error) {
       console.error("Error:", error);
+      setErrorMessage("שגיאה בשרת. נסה שוב מאוחר יותר.");
     }
   };
 
-  // הרשמה
+  // שליחת טופס הרשמה – ולידציה בסיסית בצד לקוח + בקשה לשרת
   const handleRegister = async (e) => {
     e.preventDefault();
-    if (!regUsername || !regPassword || !regConfirm) {
-      alert("מלא את כל השדות!");
+    setErrorMessage("");
+    setRegError("");
+
+    const u = regUsername.trim();
+    const p = regPassword.trim();
+    const c = regConfirm.trim();
+    const em = regEmail.trim();
+    const ph = regPhone.trim();
+
+    if (!u || !p || !c || !em || !ph) {
+      setRegError("יש למלא את כל הפרטים");
       return;
     }
-    if (regPassword !== regConfirm) {
-      alert("הסיסמאות לא תואמות!");
+    if (p !== c) {
+      setRegError("הסיסמאות לא תואמות!");
       return;
     }
 
@@ -46,92 +90,120 @@ function Login() {
       const response = await fetch("http://localhost:5000/api/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username: regUsername, password: regPassword }),
+        body: JSON.stringify({
+          username: u,
+          password: p,
+          email: em,
+          phone: ph,
+        }),
       });
 
       const data = await response.json();
       if (data.success) {
-        alert("ההרשמה הצליחה! אפשר להתחבר עכשיו.");
+        // איפוס וסגירה לאחר הרשמה מוצלחת
+        window.alert("ההרשמה הצליחה! אפשר להתחבר עכשיו.");
         setShowRegister(false);
         setRegUsername("");
         setRegPassword("");
         setRegConfirm("");
+        setRegEmail("");
+        setRegPhone("");
+        setErrorMessage("");
+        setRegError("");
       } else {
-        alert("שגיאה בהרשמה: " + data.error);
+        setRegError(data.error || "שגיאה בהרשמה");
       }
     } catch (error) {
       console.error("Error:", error);
+      setRegError("שגיאה בשרת. נסה שוב מאוחר יותר.");
     }
   };
 
+  // תמונת רקע
+  const backgroundStyle = {
+    backgroundImage: 'url("/HIT.jpg")',
+    backgroundSize: "cover",
+    backgroundPosition: "center",
+    minHeight: "100vh",
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
+  };
+
   return (
-    <div style={{ textAlign: "center", marginTop: "50px" }}>
-      <h2>התחברות</h2>
-      <form onSubmit={handleLogin}>
-        <div>
+    <div style={backgroundStyle}>
+      <div className="login-container">
+        <h2>התחברות</h2>
+
+        {/* טופס התחברות */}
+        <form onSubmit={handleLogin}>
           <input
             type="text"
             placeholder="שם משתמש"
             value={username}
             onChange={(e) => setUsername(e.target.value)}
           />
-        </div>
-        <div>
           <input
             type="password"
             placeholder="סיסמה"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
           />
+          {errorMessage && <div className="error-message">{errorMessage}</div>}
+          <button type="submit">התחבר</button>
+        </form>
+
+        {/* קישור לפתיחת חלון הרשמה */}
+        <div className="register-link" onClick={openRegister}>
+          לא רשום עדיין? הירשם עכשיו
         </div>
-        <button type="submit">התחבר</button>
-      </form>
 
-      <div style={{ marginTop: "20px" }}>
-        <button onClick={() => setShowRegister(true)}>הרשמה</button>
-      </div>
-
-      {/* מודל הרשמה */}
-      {showRegister && (
-        <div style={{
-          position: "fixed",
-          top: 0, left: 0, right: 0, bottom: 0,
-          backgroundColor: "rgba(0,0,0,0.5)",
-          display: "flex", justifyContent: "center", alignItems: "center"
-        }}>
-          <div style={{ backgroundColor: "white", padding: "20px", borderRadius: "10px" }}>
-            <h3>הרשמה</h3>
-            <form onSubmit={handleRegister}>
-              <div>
+        {/* טופס הרשמה */}
+        {showRegister && (
+          <div className="register-modal">
+            <div className="register-content">
+              <h2>הרשמה</h2>
+              <form onSubmit={handleRegister}>
                 <input
                   type="text"
                   placeholder="שם משתמש"
                   value={regUsername}
                   onChange={(e) => setRegUsername(e.target.value)}
                 />
-              </div>
-              <div>
                 <input
                   type="password"
                   placeholder="סיסמה"
                   value={regPassword}
                   onChange={(e) => setRegPassword(e.target.value)}
                 />
-              </div>
-              <div>
                 <input
                   type="password"
                   placeholder="אימות סיסמה"
                   value={regConfirm}
                   onChange={(e) => setRegConfirm(e.target.value)}
                 />
-              </div>
-              <button type="submit">הרשם</button>
-              <button type="button" onClick={() => setShowRegister(false)}>ביטול</button>
-            </form>
+                <input
+                  type="email"
+                  placeholder="כתובת מייל"
+                  value={regEmail}
+                  onChange={(e) => setRegEmail(e.target.value)}
+                />
+                <input
+                  type="tel"
+                  placeholder="טלפון"
+                  value={regPhone}
+                  onChange={(e) => setRegPhone(e.target.value)}
+                />
+                {regError && <div className="error-message">{regError}</div>}
+                <button type="submit">הרשם</button>
+                <button type="button" onClick={closeRegister}>
+                  ביטול
+                </button>
+              </form>
+            </div>
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 }

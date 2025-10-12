@@ -1,220 +1,325 @@
-const express = require('express');
-const cors = require('cors');
-const path = require('path');
-const multer = require('multer');
-const fs = require('fs');
-const db = require('./db');
+// ===== ייבוא ספריות והגדרות בסיס =====
+const express = require("express");
+const cors = require("cors");
+const path = require("path");
+const multer = require("multer");
+const fs = require("fs");
+const db = require("./db"); // Pool של MySQL2
 
 const app = express();
 const PORT = 5000;
 
+// ===== תיקיית העלאות =====
+const UPLOADS_DIR = path.join(__dirname, "uploads");
+if (!fs.existsSync(UPLOADS_DIR)) {
+  fs.mkdirSync(UPLOADS_DIR, { recursive: true });
+}
+
 app.use(cors());
 app.use(express.json());
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+app.use("/uploads", express.static(UPLOADS_DIR));
 
-// הגדרות אחסון קבצים
+// ================= אחסון קבצים =================
 const storage = multer.diskStorage({
-  destination: (req, file, cb) => cb(null, 'uploads/'),
+  destination: (req, file, cb) => cb(null, UPLOADS_DIR),
   filename: (req, file, cb) => {
-    const name = file.originalname.replace(/\s+/g, '_');
-    const time = new Date().toISOString().replace(/[:.]/g, '-');
+    const name = file.originalname.replace(/\s+/g, "_");
+    const time = new Date().toISOString().replace(/[:.]/g, "-");
     cb(null, `${time}-${name}`);
-  }
+  },
 });
 const upload = multer({ storage });
 
-app.post('/api/login', (req, res) => {
-const { username, password } = req.body;
-if(!username || !password) {
-return res.status(400).json({error:"Username and password are required"});
-}
-const sql = 'SELECT * FROM users WHERE username = ? AND password = ?';
-db.query(sql,[username,password],(err,results)=>{
-  if(err) return res.status(500).json({error:"Error in Database"});
-if(results.length>0){
-  res.json({success:true,message:"Login successful"});
-}
-else{
-  res.status(401).json({success:false,error:"Invalid credentials"});
-}
-});
-});
-app.post("/api/register", (req, res) => {
+// ================= התחברות / הרשמה =================
+app.post("/api/login", async (req, res) => {
   const { username, password } = req.body;
-  if (!username || !password) return res.status(400).json({ error: "חובה למלא שם וסיסמה" });
+  if (!username || !password)
+    return res.status(400).json({ error: "Username and password required" });
 
-  const checkSql = "SELECT * FROM users WHERE username = ?";
-  db.query(checkSql, [username], (err, results) => {
-    if (err) return res.status(500).json({ error: "שגיאה במסד הנתונים" });
-    if (results.length > 0) return res.json({ success: false, error: "שם המשתמש כבר קיים" });
-
-    const insertSql = "INSERT INTO users (username, password) VALUES (?, ?)";
-    db.query(insertSql, [username, password], (err, result) => {
-      if (err) return res.status(500).json({ error: "שגיאה בהוספת המשתמש" });
+  try {
+    const [results] = await db.query(
+      "SELECT * FROM users WHERE username = ? AND password = ?",
+      [username, password]
+    );
+    if (results.length > 0) {
       res.json({ success: true });
-    });
-  });
+    } else {
+      res.status(401).json({ success: false, error: "Invalid credentials" });
+    }
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
+// ולידציות בסיסיות ומניעת כפילויות
+app.post("/api/register", async (req, res) => {
+  let username = (req.body?.username ?? "").toString().trim();
+  let password = (req.body?.password ?? "").toString().trim();
+  let email = (req.body?.email ?? "").toString().trim().toLowerCase();
+  let phone = (req.body?.phone ?? "").toString().trim();
+
+  if (!username) return res.status(400).json({ error: "חובה למלא שם משתמש" });
+  if (!password) return res.status(400).json({ error: "חובה למלא סיסמה" });
+  if (!email) return res.status(400).json({ error: "חובה למלא כתובת מייל" });
+  if (!phone) return res.status(400).json({ error: "חובה למלא מספר טלפון" });
+
+  // כתובת מייל - מחייבת @ ואז נקודה
+  const emailRegex = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
+  if (!emailRegex.test(email)) {
+    return res.status(400).json({ error: "כתובת מייל אינה חוקית" });
+  }
+
+  // טלפון - בדיוק 10 ספרות
+  const phoneRegex = /^\d{10}$/;
+  if (!phoneRegex.test(phone)) {
+    return res.status(400).json({ error: "מספר הפלאפון אינו חוקי" });
+  }
+
+  try {
+    // מניעת כפילויות
+    const [u] = await db.query("SELECT 1 FROM users WHERE username=? LIMIT 1", [
+      username,
+    ]);
+    if (u.length)
+      return res.json({ success: false, error: "שם המשתמש כבר קיים" });
+
+    const [e] = await db.query("SELECT 1 FROM users WHERE email=? LIMIT 1", [
+      email,
+    ]);
+    if (e.length)
+      return res.json({ success: false, error: "כבר קיים משתמש עם כתובת זו" });
+
+    const [p] = await db.query("SELECT 1 FROM users WHERE phone=? LIMIT 1", [
+      phone,
+    ]);
+    if (p.length)
+      return res.json({ success: false, error: "מספר הטלפון כבר קיים" });
+
+    await db.query(
+      "INSERT INTO users (username, password, email, phone) VALUES (?, ?, ?, ?)",
+      [username, password, email, phone]
+    );
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
 
 // ================= אזורים =================
-
-app.post('/api/areas/upload', upload.single('path'), (req, res) => {
-  const { name, description } = req.body;
-  if (!req.file || !name || !description) {
-    return res.status(400).json({ error: 'חובה למלא שם, תיאור ולהעלות תמונה.' });
-  }
-
-  const filePath = req.file.filename;
-  db.query('INSERT INTO areas (name, description, path) VALUES (?, ?, ?)',
-    [name, description, filePath],
-    (err, result) => {
-      if (err) return res.status(500).json({ error: err.message });
-      res.json({ id: result.insertId, name, description, path: filePath });
-    });
-});
-
-app.get('/api/areas', (req, res) => {
-  db.query('SELECT * FROM areas', (err, results) => {
-    if (err) return res.status(500).json({ error: err.message });
-    res.json(results);
-  });
-});
-
-app.get('/api/areas/name/:name', (req, res) => {
-  const areaName = decodeURIComponent(req.params.name);
-  db.query('SELECT * FROM areas WHERE name = ?', [areaName], (err, results) => {
-    if (err) return res.status(500).json({ error: err.message });
-    if (results.length === 0) return res.status(404).json({ error: 'אזור לא נמצא' });
-    res.json(results[0]);
-  });
-});
-
-app.put('/api/areas/name/:name', upload.single('path'), (req, res) => {
-  const { name, description } = req.body;
-  const oldName = req.params.name;
-  const filePath = req.file ? req.file.filename : null;
-
-  const fields = [];
-  const values = [];
-
-  if (name) {
-    fields.push('name = ?');
-    values.push(name);
-  }
-  if (description) {
-    fields.push('description = ?');
-    values.push(description);
-  }
-  if (filePath) {
-    fields.push('path = ?');
-    values.push(filePath);
-    db.query('SELECT path FROM areas WHERE name = ?', [oldName], (err, results) => {
-      if (results?.[0]?.path) {
-        fs.unlink(path.join(__dirname, 'uploads', results[0].path), () => {});
-      }
-    });
-  }
-
-  if (fields.length === 0) return res.status(400).json({ error: 'אין נתונים לעדכון' });
-
-  values.push(oldName);
-  db.query(`UPDATE areas SET ${fields.join(', ')} WHERE name = ?`, values, (err) => {
-    if (err) return res.status(500).json({ error: err.message });
-    res.json({ message: 'האזור עודכן בהצלחה' });
-  });
-});
-
-app.delete('/api/areas/name/:name', (req, res) => {
-  const areaName = decodeURIComponent(req.params.name);
-
-  db.query('SELECT path FROM areas WHERE name = ?', [areaName], (err, results) => {
-    if (!err && results[0]?.path) {
-      fs.unlink(path.join(__dirname, 'uploads', results[0].path), () => {});
+app.post("/api/areas/upload", upload.single("path"), async (req, res) => {
+  try {
+    const { name, description } = req.body;
+    if (!req.file || !name || !description) {
+      return res
+        .status(400)
+        .json({ error: "חובה למלא שם, תיאור ולהעלות תמונה." });
     }
-  });
+    const filePath = req.file.filename;
+    const [result] = await db.query(
+      "INSERT INTO areas (name, description, path) VALUES (?, ?, ?)",
+      [name, description, filePath]
+    );
+    res.json({ id: result.insertId, name, description, path: filePath });
+  } catch (err) {
+    console.error("Upload error:", err); // יופיע בטרמינל
+    res.status(500).json({ error: err.message });
+  }
+});
 
-  db.query('DELETE FROM shades WHERE Area = (SELECT id FROM areas WHERE name = ?)', [areaName]);
-  db.query('DELETE FROM areas WHERE name = ?', [areaName], (err, result) => {
-    if (err) return res.status(500).json({ error: 'שגיאה במחיקת האזור' });
-    if (result.affectedRows === 0) return res.status(404).json({ error: 'אזור לא נמצא' });
-    res.json({ message: 'אזור נמחק בהצלחה' });
-  });
+// רשימת כל האזורים
+app.get("/api/areas", async (req, res) => {
+  try {
+    const [results] = await db.query("SELECT * FROM areas");
+    res.json(results);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// אזור לפי שם 
+app.get("/api/areas/name/:name", async (req, res) => {
+  try {
+    const areaName = decodeURIComponent(req.params.name);
+    const [results] = await db.query("SELECT * FROM areas WHERE name = ?", [
+      areaName,
+    ]);
+    if (results.length === 0)
+      return res.status(404).json({ error: "אזור לא נמצא" });
+    res.json(results[0]);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// עדכון אזור
+app.put("/api/areas/name/:name", upload.single("path"), async (req, res) => {
+  try {
+    const { name, description } = req.body;
+    const oldName = req.params.name;
+    const filePath = req.file ? req.file.filename : null;
+
+    const fields = [];
+    const values = [];
+
+    if (name) {
+      fields.push("name = ?");
+      values.push(name);
+    }
+    if (description) {
+      fields.push("description = ?");
+      values.push(description);
+    }
+    if (filePath) {
+      fields.push("path = ?");
+      values.push(filePath);
+      const [oldFile] = await db.query(
+        "SELECT path FROM areas WHERE name = ?",
+        [oldName]
+      );
+      if (oldFile[0]?.path)
+        fs.unlink(path.join(__dirname, "uploads", oldFile[0].path), () => {});
+    }
+
+    if (fields.length === 0)
+      return res.status(400).json({ error: "אין נתונים לעדכון" });
+    values.push(oldName);
+
+    await db.query(
+      `UPDATE areas SET ${fields.join(", ")} WHERE name = ?`,
+      values
+    );
+    res.json({ message: "האזור עודכן בהצלחה" });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// מחיקת אזור – מוחק גם את התמונה והצללות שקשורות אליו
+app.delete("/api/areas/name/:name", async (req, res) => {
+  try {
+    const areaName = decodeURIComponent(req.params.name);
+    const [area] = await db.query("SELECT id, path FROM areas WHERE name = ?", [
+      areaName,
+    ]);
+    if (!area[0]) return res.status(404).json({ error: "אזור לא נמצא" });
+
+    if (area[0].path)
+      fs.unlink(path.join(__dirname, "uploads", area[0].path), () => {});
+
+    await db.query("DELETE FROM shades WHERE Area = ?", [area[0].id]);
+    await db.query("DELETE FROM areas WHERE id = ?", [area[0].id]);
+    res.json({ message: "אזור נמחק בהצלחה" });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 // ================= הצללות =================
+app.post("/api/shades", async (req, res) => {
+  try {
+    const { Area, width, height, percentage, description, x, y } = req.body;
+    if (
+      !Area ||
+      !width ||
+      !height ||
+      !percentage ||
+      !description ||
+      x == null ||
+      y == null
+    ) {
+      return res
+        .status(400)
+        .json({ error: "יש למלא את כל השדות: אחוז, תיאור, מיקום וגודל" });
+    }
 
-// ✅ שמירת הצללה לפי שם אזור
-app.post('/api/shades', (req, res) => {
-  const { Area, width, height, percentage, description, x, y } = req.body;
+    const [area] = await db.query("SELECT id FROM areas WHERE name = ?", [
+      Area,
+    ]);
+    if (area.length === 0)
+      return res.status(400).json({ error: "אזור לא נמצא במסד הנתונים" });
 
-  if (!Area || !width || !height || !percentage || !description || x == null || y == null) {
-    return res.status(400).json({ error: 'יש למלא את כל השדות: אחוז, תיאור, מיקום וגודל' });
+    const areaId = area[0].id;
+    const [result] = await db.query(
+      "INSERT INTO shades (Area, width, height, percentage, description, x, y) VALUES (?, ?, ?, ?, ?, ?, ?)",
+      [areaId, width, height, percentage, description, x, y]
+    );
+    res.json({ id: result.insertId });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
   }
-
-  const getAreaIdQuery = 'SELECT id FROM areas WHERE name = ?';
-
-  db.query(getAreaIdQuery, [Area], (err, results) => {
-    if (err) return res.status(500).json({ error: 'שגיאה בבדיקת שם אזור' });
-    if (results.length === 0) return res.status(400).json({ error: 'אזור לא נמצא במסד הנתונים' });
-
-    const areaId = results[0].id;
-
-    const insertQuery = `
-      INSERT INTO shades (Area, width, height, percentage, description, x, y)
-      VALUES (?, ?, ?, ?, ?, ?, ?)
-    `;
-
-    db.query(insertQuery, [areaId, width, height, percentage, description, x, y], (err, result) => {
-      if (err) return res.status(500).json({ error: err.message });
-      res.json({ id: result.insertId });
-    });
-  });
 });
 
-app.get('/api/shades/:name', (req, res) => {
-  const areaName = decodeURIComponent(req.params.name);
-  const sql = `
-    SELECT s.* FROM shades s
-    JOIN areas a ON s.Area = a.id
-    WHERE a.name = ?
-  `;
-  db.query(sql, [areaName], (err, results) => {
-    if (err) return res.status(500).json({ error: err.message });
+// כל ההצללות לפי שם אזור
+app.get("/api/shades/:name", async (req, res) => {
+  try {
+    const areaName = decodeURIComponent(req.params.name);
+    const [results] = await db.query(
+      `SELECT s.* FROM shades s JOIN areas a ON s.Area = a.id WHERE a.name = ?`,
+      [areaName]
+    );
     res.json(results);
-  });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
-app.put('/api/shades/:id', (req, res) => {
-  const { width, height, percentage, description, x, y } = req.body;
-  const fields = [];
-  const values = [];
+// עדכון הצללה
+app.put("/api/shades/:id", async (req, res) => {
+  try {
+    const { width, height, percentage, description, x, y } = req.body;
+    const fields = [];
+    const values = [];
 
-  if (width) { fields.push('width = ?'); values.push(width); }
-  if (height) { fields.push('height = ?'); values.push(height); }
-  if (percentage) { fields.push('percentage = ?'); values.push(percentage); }
-  if (description) { fields.push('description = ?'); values.push(description); }
-  if (x != null) { fields.push('x = ?'); values.push(x); }
-  if (y != null) { fields.push('y = ?'); values.push(y); }
+    if (width) {
+      fields.push("width = ?");
+      values.push(width);
+    }
+    if (height) {
+      fields.push("height = ?");
+      values.push(height);
+    }
+    if (percentage) {
+      fields.push("percentage = ?");
+      values.push(percentage);
+    }
+    if (description) {
+      fields.push("description = ?");
+      values.push(description);
+    }
+    if (x != null) {
+      fields.push("x = ?");
+      values.push(x);
+    }
+    if (y != null) {
+      fields.push("y = ?");
+      values.push(y);
+    }
 
-  if (fields.length === 0) return res.status(400).json({ error: 'אין שדות לעדכון' });
+    if (fields.length === 0)
+      return res.status(400).json({ error: "אין שדות לעדכון" });
 
-  values.push(req.params.id);
-  db.query(`UPDATE shades SET ${fields.join(', ')} WHERE id = ?`, values, (err) => {
-    if (err) return res.status(500).json({ error: err.message });
-    res.json({ message: 'הצללה עודכנה בהצלחה' });
-  });
+    values.push(req.params.id);
+    await db.query(
+      `UPDATE shades SET ${fields.join(", ")} WHERE id = ?`,
+      values
+    );
+    res.json({ message: "הצללה עודכנה בהצלחה" });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
-app.delete('/api/shades/:id', (req, res) => {
-  db.query('DELETE FROM shades WHERE id = ?', [req.params.id], (err) => {
-    if (err) return res.status(500).json({ error: err.message });
-    res.json({ message: 'הצללה נמחקה בהצלחה' });
-  });
+// מחיקת הצללה לפי מזהה
+app.delete("/api/shades/:id", async (req, res) => {
+  try {
+    await db.query("DELETE FROM shades WHERE id = ?", [req.params.id]);
+    res.json({ message: "הצללה נמחקה בהצלחה" });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 // ================= הרצת השרת =================
-
 app.listen(PORT, () => {
   console.log(`🚀 השרת רץ על http://localhost:${PORT}`);
 });
