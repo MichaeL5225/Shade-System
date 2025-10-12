@@ -1,18 +1,23 @@
+// Login.js
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import axios from "axios";            // ← נדרש כדי להגדיר Authorization אחרי לוגין
 import "./Login.css";
 
 function Login() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+
   const [regEmail, setRegEmail] = useState("");
   const [regPhone, setRegPhone] = useState("");
-  const [errorMessage, setErrorMessage] = useState("");
-  const [showRegister, setShowRegister] = useState(false);
   const [regUsername, setRegUsername] = useState("");
   const [regPassword, setRegPassword] = useState("");
   const [regConfirm, setRegConfirm] = useState("");
+
+  const [errorMessage, setErrorMessage] = useState("");
   const [regError, setRegError] = useState("");
+  const [showRegister, setShowRegister] = useState(false);
+
   const navigate = useNavigate();
 
   // פתיחת חלון הרשמה – איפוס שדות ושגיאות
@@ -38,34 +43,45 @@ function Login() {
     setRegError("");
   };
 
-  // שליחת טופס התחברות – בקשה לשרת, שמירת שם משתמש ב-localStorage וניווט
+  // התחברות
   const handleLogin = async (e) => {
     e.preventDefault();
     setErrorMessage("");
 
     try {
-      const response = await fetch("http://localhost:5000/api/login", {
+      const res = await fetch("http://localhost:5000/api/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ username, password }),
       });
-      const data = await response.json();
+      const data = await res.json();
+
       if (data.success) {
-        localStorage.setItem(
-          "shade_username",
-          (data?.username || username || "").trim()
-        );
+        // שם משתמש (למקרה שהשרת מחזיר, ואם לא – נשתמש במה שמולא)
+        const uname = (data?.username || username || "").trim();
+        localStorage.setItem("shade_username", uname);
+
+        // שומרים role + token אם חזרו מהשרת
+        if (typeof data.role !== "undefined") {
+          localStorage.setItem("shade_role", String(data.role));
+        }
+        if (data.token) {
+          localStorage.setItem("shade_token", data.token);
+          // נגדיר Authorization לכל בקשות axios הבאות
+          axios.defaults.headers.common.Authorization = `Bearer ${data.token}`;
+        }
+
         navigate("/areaList");
       } else {
-        setErrorMessage("שם משתמש או סיסמה לא נכונים!");
+        setErrorMessage(data.error || "שם משתמש או סיסמה לא נכונים!");
       }
-    } catch (error) {
-      console.error("Error:", error);
+    } catch (err) {
+      console.error("Login error:", err);
       setErrorMessage("שגיאה בשרת. נסה שוב מאוחר יותר.");
     }
   };
 
-  // שליחת טופס הרשמה – ולידציה בסיסית בצד לקוח + בקשה לשרת
+  // הרשמה
   const handleRegister = async (e) => {
     e.preventDefault();
     setErrorMessage("");
@@ -87,7 +103,7 @@ function Login() {
     }
 
     try {
-      const response = await fetch("http://localhost:5000/api/register", {
+      const res = await fetch("http://localhost:5000/api/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -97,24 +113,16 @@ function Login() {
           phone: ph,
         }),
       });
+      const data = await res.json();
 
-      const data = await response.json();
       if (data.success) {
-        // איפוס וסגירה לאחר הרשמה מוצלחת
         window.alert("ההרשמה הצליחה! אפשר להתחבר עכשיו.");
-        setShowRegister(false);
-        setRegUsername("");
-        setRegPassword("");
-        setRegConfirm("");
-        setRegEmail("");
-        setRegPhone("");
-        setErrorMessage("");
-        setRegError("");
+        closeRegister(); // יסגור וגם יאפס הכל
       } else {
         setRegError(data.error || "שגיאה בהרשמה");
       }
-    } catch (error) {
-      console.error("Error:", error);
+    } catch (err) {
+      console.error("Register error:", err);
       setRegError("שגיאה בשרת. נסה שוב מאוחר יותר.");
     }
   };

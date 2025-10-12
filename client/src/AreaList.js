@@ -1,9 +1,10 @@
+// AreaList.js
 import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import { Link } from 'react-router-dom';
 import './AreaList.css';
-axios.defaults.baseURL = 'http://localhost:5000';
 
+axios.defaults.baseURL = 'http://localhost:5000';
 
 function AreaList() {
   const [username, setUsername] = useState('');
@@ -17,52 +18,61 @@ function AreaList() {
   const [preview, setPreview] = useState(null);
   const fileInputRef = useRef(null);
 
-  // טעינת שם משתמש שנשמר ב-localStorage 
+  // ===== RBAC =====
+  const role = Number(localStorage.getItem('shade_role') || 2);
+  const isAdmin = role === 1;
+
+  // ===== USERS PANEL (מצבים) =====
+  const [showUsersPanel, setShowUsersPanel] = useState(false);   // USERS PANEL
+  const [users, setUsers] = useState([]);                        // USERS PANEL (מצב תצוגה)
+  const [editableUsers, setEditableUsers] = useState([]);        // USERS PANEL (מצב עריכה)
+  const [usersEditMode, setUsersEditMode] = useState(false);     // USERS PANEL
+  const [loadingUsers, setLoadingUsers] = useState(false);       // USERS PANEL
+  const [savingUsers, setSavingUsers] = useState(false);         // USERS PANEL
+
+  // טעינת שם משתמש
   useEffect(() => {
     setUsername(localStorage.getItem('shade_username') || '');
   }, []);
 
-  // הבאת רשימת אזורים מהשרת עם טעינת הדף
+  // הבאת רשימת אזורים
   useEffect(() => {
     axios.get('/api/areas')
       .then(res => setAreas(res.data))
       .catch(err => console.error('שגיאה בקבלת אזורים:', err));
   }, []);
 
-  // ניקוי URL של תצוגת התמונה המקדימה בעת יציאה/החלפה
+  // ניקוי תצוגת תמונה
   useEffect(() => {
-  return () => {
-    if (preview) URL.revokeObjectURL(preview);
+    return () => { if (preview) URL.revokeObjectURL(preview); };
+  }, [preview]);
+
+  // טופס אזור
+  const toggleForm = () => {
+    if (!isAdmin) { alert('אין הרשאה להוסיף אזור'); return; }
+    setShowForm(!showForm);
   };
-}, [preview]);
 
-  // הצגת/הסתרת טופס הוספת אזור
-  const toggleForm = () => { setShowForm(!showForm); };
-
-  // שליחת טופס הוספת אזור: ולידציה בסיסית + העלאת תמונה ב-FormData
   const handleAddArea = () => {
+    if (!isAdmin) { alert('אין הרשאה לבצע פעולה זו'); return; }
     const { name, description } = newArea;
-    if (!name || !description || !pathFile) return alert('חובה למלא את כל השדות ולהעלות תמונה');
+    if (!name || !description || !pathFile)
+      return alert('חובה למלא את כל השדות ולהעלות תמונה');
 
     const formData = new FormData();
     formData.append('name', name);
     formData.append('description', description);
     formData.append('path', pathFile);
-    
-    console.log(formData);
 
     axios.post('/api/areas/upload', formData)
       .then(res => {
         setAreas([...areas, res.data]);
         setNewArea({ name: '', description: '' });
         setPathFile(null);
-       
         if (preview) URL.revokeObjectURL(preview);
         setPreview(null);
-
         setShowForm(false);
       })
-
       .catch(err => {
         const msg = err.response?.data?.error || err.message;
         console.error('שגיאה בשליחה:', msg);
@@ -70,15 +80,23 @@ function AreaList() {
       });
   };
 
-  // מחיקת אזורים מסומנים (בבת אחת)
   const handleDeleteSelected = () => {
-    Promise.all(selectedAreas.map(name => axios.delete(`/api/areas/name/${encodeURIComponent(name)}`)))
-      .then(() => { setAreas(areas.filter(area => !selectedAreas.includes(area.name))); setSelectedAreas([]); setDeleteMode(false); })
+    if (!isAdmin) { alert('אין הרשאה למחיקה'); return; }
+    Promise.all(
+      selectedAreas.map(name =>
+        axios.delete(`/api/areas/name/${encodeURIComponent(name)}`)
+      )
+    )
+      .then(() => {
+        setAreas(areas.filter(area => !selectedAreas.includes(area.name)));
+        setSelectedAreas([]);
+        setDeleteMode(false);
+      })
       .catch(err => console.error('שגיאה במחיקה:', err));
   };
 
-  // מחיקת אזור בודד לאחר אישור
   const handleDeleteSingle = async (name) => {
+    if (!isAdmin) { alert('אין הרשאה למחיקה'); return; }
     const ok = window.confirm(`האם את/ה בטוח/ה שברצונך למחוק את האזור "${name}"?`);
     if (!ok) return;
     try {
@@ -90,22 +108,103 @@ function AreaList() {
     }
   };
 
-  // סינון אזורים לפי חיפוש
-  const filteredAreas = areas.filter(area => area.name.toLowerCase().includes(searchTerm.toLowerCase()));
+  const filteredAreas = areas.filter(area =>
+    area.name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
-  // טיפול בבחירת קובץ + יצירת תצוגה מקדימה
   const handleFileChange = (e) => {
     const file = e.target.files?.[0] || null;
-
     if (preview) {
       URL.revokeObjectURL(preview);
       setPreview(null);
     }
-
     setPathFile(file);
-    if (file) {
-      const url = URL.createObjectURL(file);
-      setPreview(url);
+    if (file) setPreview(URL.createObjectURL(file));
+  };
+
+  // ===== USERS PANEL (פונקציות) =====
+  const loadUsers = async () => {                                  // USERS PANEL
+    if (!isAdmin) return;
+    try {
+      setLoadingUsers(true);
+      const { data } = await axios.get('/api/users'); // דורש Authorization
+      setUsers(Array.isArray(data) ? data : []);
+      // אם היינו במצב עריכה קודם, נעדכן גם ה־editableUsers
+      if (usersEditMode) setEditableUsers(Array.isArray(data) ? data.map(u => ({ ...u })) : []);
+    } catch (e) {
+      alert(e?.response?.data?.error || e.message);
+    } finally {
+      setLoadingUsers(false);
+    }
+  };
+
+  const toggleUsersPanel = async () => {                           // USERS PANEL
+    if (!isAdmin) return;
+    const next = !showUsersPanel;
+    setShowUsersPanel(next);
+    if (next) {
+      setUsersEditMode(false);  // ברירת מחדל – מצב תצוגה
+      await loadUsers();
+    }
+  };
+
+  const enterUsersEdit = () => {                                   // USERS PANEL
+    if (!isAdmin) return;
+    setEditableUsers(users.map(u => ({ ...u }))); // עותק לעריכה
+    setUsersEditMode(true);
+  };
+
+  const cancelUsersEdit = () => {                                  // USERS PANEL
+    setUsersEditMode(false);
+    setEditableUsers([]); // זריקת שינויים מקומיים
+  };
+
+  // עדכון שדה בתוך editableUsers
+  const updateEditableUserField = (id, field, value) => {          // USERS PANEL
+    setEditableUsers(prev => prev.map(u => (u.id === id ? { ...u, [field]: value } : u)));
+  };
+
+  // שמירה כללית — שולחת רק מה שהשתנה
+  const saveAllUsers = async () => {                                // USERS PANEL
+    if (!isAdmin || !usersEditMode) return;
+    try {
+      setSavingUsers(true);
+
+      // נשווה בין users (מצב תצוגה – לפני עריכה) לבין editableUsers (לאחר עריכה)
+      const updates = [];
+      for (let i = 0; i < editableUsers.length; i++) {
+        const cur = editableUsers[i];
+        const orig = users.find(u => u.id === cur.id);
+        if (!orig) continue;
+
+        const payload = {};
+        if (cur.email !== orig.email) payload.email = String(cur.email || '').trim().toLowerCase();
+        if (cur.phone !== orig.phone) payload.phone = String(cur.phone || '').trim();
+        if (Number(cur.role) !== Number(orig.role)) payload.role = Number(cur.role);
+
+        if (Object.keys(payload).length) {
+          updates.push({ id: cur.id, payload });
+        }
+      }
+
+      if (updates.length === 0) {
+        alert('אין שינויים לשמירה');
+        return;
+      }
+
+      // שולחים עדכונים (אפשר מקביל; כאן נעבור בטור לקריאות ברורות)
+      for (const u of updates) {
+        await axios.put(`/api/users/${u.id}`, u.payload);
+      }
+
+      alert('נשמר בהצלחה');
+      setUsersEditMode(false);
+      setEditableUsers([]);
+      await loadUsers(); // רענון רשימה אחרי שמירה
+    } catch (e) {
+      alert(e?.response?.data?.error || e.message);
+    } finally {
+      setSavingUsers(false);
     }
   };
 
@@ -113,142 +212,239 @@ function AreaList() {
     <div
       className="App"
       style={{
-        backgroundImage: "url('/HIT.jpg')", 
+        backgroundImage: "url('/HIT.jpg')",
         backgroundSize: "cover",
         backgroundPosition: "center",
         minHeight: "100vh"
       }}
     >
-
-      {/* פס עליון: ברכת שלום עם שם המשתמש */}
+      {/* פס עליון */}
       <div className="welcome-strip">
         <div className="welcome-inner">
-          ברוך הבא{username ? `, ${username}` : ''} 
+          ברוך הבא{username ? `, ${username}` : ''}
         </div>
       </div>
-      
-    {/* אזור ניהול וחיפוש אזורים */}
-    {!showForm && (
-      <section className="hero">
-      <div className="hero-card">
-        <h1 className="hero-title">ניהול אזורי קמפוס</h1>
 
-        <div className="hero-actions">
-          <div className="areas-panel">
-            {/* חיפוש אזור לפי שם */}
-            <input
-              type="text"
-              placeholder="חיפוש..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="search-bar"
-            />
+      {/* אזור ניהול וחיפוש אזורים */}
+      {!showForm && (
+        <section className="hero">
+          <div className="hero-card">
+            <h1 className="hero-title">ניהול אזורי קמפוס</h1>
 
-            {/* רשימת אזורים/מצב ריק */}
-            {filteredAreas.length === 0 ? (
-              <div className="empty-state">
-                {searchTerm ? "לא נמצאו אזורים" : "לא נוספו אזורים"}
+            <div className="hero-actions">
+              <div className="areas-panel">
+                {/* חיפוש */}
+                <input
+                  type="text"
+                  placeholder="חיפוש..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="search-bar"
+                />
+
+                {/* רשימת אזורים */}
+                {filteredAreas.length === 0 ? (
+                  <div className="empty-state">
+                    {searchTerm ? "לא נמצאו אזורים" : "לא נוספו אזורים"}
+                  </div>
+                ) : (
+                  filteredAreas.map((area, index) => (
+                    <div key={index} className="area-item">
+                      <Link to={`/edit/${encodeURIComponent(area.name)}`}>
+                        <strong>{area.name}</strong>
+                      </Link>
+
+                      {/* מחיקה – רק אדמין */}
+                      {isAdmin && (
+                        <button
+                          type="button"
+                          className="trash-icon-btn"
+                          title={`מחיקת האזור "${area.name}"`}
+                          aria-label={`מחיקת האזור ${area.name}`}
+                          onClick={() => handleDeleteSingle(area.name)}
+                        >
+                          🗑
+                        </button>
+                      )}
+                    </div>
+                  ))
+                )}
+
+                {/* מחיקת נבחרים */}
+                {isAdmin && deleteMode && selectedAreas.length > 0 && (
+                  <div className="panel-actions">
+                    <button className="btn delete small" onClick={handleDeleteSelected}>
+                      🗑 מחיקת נבחרים ({selectedAreas.length})
+                    </button>
+                  </div>
+                )}
               </div>
-            ) : (
-              filteredAreas.map((area, index) => (
-                <div key={index} className="area-item">
-                  <Link to={`/edit/${encodeURIComponent(area.name)}`}>
-                    <strong>{area.name}</strong>
-                  </Link>
-                  <button
-                    type="button"
-                    className="trash-icon-btn"
-                    title={`מחיקת האזור "${area.name}"`}
-                    aria-label={`מחיקת האזור ${area.name}`}
-                    onClick={() => handleDeleteSingle(area.name)}
-                  >
-                    🗑
-                  </button>
-                </div>
-              ))
-            )}
+            </div>
 
-            {/* פעולת מחיקה מרוכזת */}
-            {deleteMode && selectedAreas.length > 0 && (
-              <div className="panel-actions">
-                <button className="btn delete small" onClick={handleDeleteSelected}>
-                  🗑 מחיקת נבחרים ({selectedAreas.length})
-                </button>
+            {/* כפתורי ניהול */}
+            <div className="actions-row" style={{ gap: 12 }}>
+              {isAdmin && (
+                <>
+                  <button className="btn-hero btn-primary" onClick={toggleForm}>
+                    הוספת אזור
+                  </button>
+
+                  {/* פתיחת/סגירת פאנל המשתמשים */}
+                  <button className="btn-hero" onClick={toggleUsersPanel}>
+                    {showUsersPanel ? 'הסתר משתמשים' : 'משתמשים'}
+                  </button>
+                </>
+              )}
+            </div>
+
+            {/* פאנל משתמשים */}
+            {isAdmin && showUsersPanel && (
+              <div className="admin-users-panel" style={{ marginTop: 16 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+                  <h3 style={{ margin: 0 }}>משתמשים</h3>
+                  <button onClick={loadUsers} disabled={loadingUsers}>
+                    {loadingUsers ? 'טוען...' : 'רענן'}
+                  </button>
+
+                  {!usersEditMode ? (
+                    <button onClick={enterUsersEdit} disabled={loadingUsers || users.length === 0}>
+                      עריכה
+                    </button>
+                  ) : (
+                    <>
+                      <button onClick={saveAllUsers} disabled={savingUsers}>
+                        {savingUsers ? 'שומר...' : 'שמור'}
+                      </button>
+                      <button onClick={cancelUsersEdit} disabled={savingUsers}>
+                        בטל
+                      </button>
+                    </>
+                  )}
+                </div>
+
+                {users.length === 0 ? (
+                  <div className="empty-state">אין משתמשים להצגה.</div>
+                ) : (
+                  <div className="users-table-wrap" style={{ overflowX: 'auto' }}>
+                    <table className="users-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
+                      <thead>
+                        <tr>
+                          <th style={{ textAlign: 'start' }}>ID</th>
+                          <th style={{ textAlign: 'start' }}>Username</th>
+                          <th style={{ textAlign: 'start' }}>Email</th>
+                          <th style={{ textAlign: 'start' }}>Phone</th>
+                          <th style={{ textAlign: 'start' }}>Role</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {(usersEditMode ? editableUsers : users).map(u => (
+                          <tr key={u.id}>
+                            <td>{u.id}</td>
+                            <td>{u.username}</td>
+                            <td>
+                              <input
+                                type="email"
+                                value={(usersEditMode ? u.email : u.email) || ''}
+                                onChange={(e) => updateEditableUserField(u.id, 'email', e.target.value)}
+                                style={{ width: '100%' }}
+                                disabled={!usersEditMode}
+                              />
+                            </td>
+                            <td>
+                              <input
+                                type="tel"
+                                value={(usersEditMode ? u.phone : u.phone) || ''}
+                                onChange={(e) => updateEditableUserField(u.id, 'phone', e.target.value)}
+                                style={{ width: '100%' }}
+                                disabled={!usersEditMode}
+                              />
+                            </td>
+                            <td>
+                              <select
+                                value={Number(usersEditMode ? u.role : u.role) || 2}
+                                onChange={(e) => updateEditableUserField(u.id, 'role', Number(e.target.value))}
+                                disabled={!usersEditMode}
+                              >
+                                <option value={1}>1 (Admin)</option>
+                                <option value={2}>2 (Viewer)</option>
+                              </select>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
               </div>
             )}
           </div>
-        </div>
-        <div className="actions-row">
-          <button className="btn-hero btn-primary" onClick={toggleForm}>
-            הוספת אזור
-          </button>
-        </div>
-      </div>
-    </section>
-  )}
+        </section>
+      )}
 
       {/* טופס הוספת אזור חדש */}
       {showForm && (
         <div className="form-container">
-
-          <h2 className="form-title">הוספת איזור</h2> 
+          <h2 className="form-title">הוספת איזור</h2>
 
           <div className="form-body">
-            <input 
-              type="text" 
-              placeholder="שם האזור" 
-              value={newArea.name} 
-              onChange={(e) => setNewArea({ ...newArea, name: e.target.value })} 
+            <input
+              type="text"
+              placeholder="שם האזור"
+              value={newArea.name}
+              onChange={(e) => setNewArea({ ...newArea, name: e.target.value })}
+              disabled={!isAdmin}
             />
-            <textarea 
-              placeholder="תיאור האזור" 
-              value={newArea.description} 
-              onChange={(e) => setNewArea({ ...newArea, description: e.target.value })} 
+            <textarea
+              placeholder="תיאור האזור"
+              value={newArea.description}
+              onChange={(e) => setNewArea({ ...newArea, description: e.target.value })}
+              disabled={!isAdmin}
             />
-            <input 
+            <input
               ref={fileInputRef}
-              type="file" 
-              accept="image/*" 
+              type="file"
+              accept="image/*"
               onChange={handleFileChange}
+              disabled={!isAdmin}
             />
 
-            {pathFile && (
+            {isAdmin && pathFile && (
               <button
                 type="button"
-                className="trash-btn"  
+                className="trash-btn"
                 title="מחיקת תמונה"
                 onClick={() => {
                   if (preview) URL.revokeObjectURL(preview);
                   setPreview(null);
                   setPathFile(null);
                   if (fileInputRef.current) fileInputRef.current.value = '';
-                }}         
+                }}
               >
                 🗑
               </button>
             )}
           </div>
 
-          {/* תצוגה מקדימה לתמונה שנבחרה */}
           {preview && (
             <img src={preview} alt="תצוגה מקדימה" className="image-preview" />
           )}
-          
-          
+
           <div className="form-actions">
             <button
               className="btn back-btn"
               onClick={() => setShowForm(false)}
             >
-              → חזרה 
+              → חזרה
             </button>
-            
-            <button
-              className="btn submit-btn" 
-              onClick={handleAddArea}
-            >
-              הוסף
-            </button>
+
+            {isAdmin && (
+              <button
+                className="btn submit-btn"
+                onClick={handleAddArea}
+              >
+                הוסף
+              </button>
+            )}
           </div>
         </div>
       )}

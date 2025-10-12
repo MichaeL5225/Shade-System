@@ -1,18 +1,33 @@
-import React from "react";
+// App.js
+import React, { useEffect } from "react";
+import axios from "axios";
 
-// ייבוא כלים לניווט בין מסכים בתוך אפליקציית SPA
 import {
-  BrowserRouter as Router, 
-  Routes, 
-  Route, 
+  BrowserRouter as Router,
+  Routes,
+  Route,
 } from "react-router-dom";
 
-// ייבוא המסכים (קומפוננטות עיקריות באתר)
-import AreaList from "./AreaList"; 
-import EditArea from "./EditArea"; 
+import AreaList from "./AreaList";
+import EditArea from "./EditArea";
 import Login from "./Login";
 
 function App() {
+  // בעת עליית האפליקציה/רענון דף:
+  // 1) מרים את ה-token שנשמר בלוגין
+  // 2) קובע כותרת Authorization לכל בקשות axios הבאות
+  useEffect(() => {
+    const t = localStorage.getItem("shade_token");
+    if (t) {
+      axios.defaults.headers.common.Authorization = `Bearer ${t}`;
+    } else {
+      delete axios.defaults.headers.common.Authorization;
+    }
+
+    // אם את עובדת מול שרת על פורט/דומיין קבועים—אפשר לקבוע baseURL פעם אחת:
+    // axios.defaults.baseURL = "http://localhost:5000";
+  }, []);
+
   return (
     <Router>
       <Routes>

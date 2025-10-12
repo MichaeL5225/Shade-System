@@ -18,6 +18,11 @@ const TrashIcon = ({ size = 16 }) => (
 
 function EditArea() {
   const { name } = useParams();
+
+  // RBAC — נקרא את ה-role מה-localStorage ונחשב isAdmin
+  const role = Number(localStorage.getItem("shade_role") || 2); // RBAC
+  const isAdmin = role === 1; // RBAC
+
   const [areaData, setAreaData] = useState({
     name: "",
     description: "",
@@ -40,7 +45,6 @@ function EditArea() {
   const mapRef = useRef();
   const navigate = useNavigate();
   const handleBack = () => {
-    // אם יש היסטוריה – חזרה צעד אחד; אחרת לנווט לרשימת האזורים (עמוד הבית)
     if (window.history.length > 1) navigate(-1);
     else navigate("/");
   };
@@ -114,7 +118,6 @@ function EditArea() {
     const ro = new ResizeObserver(() => updateImageMetrics());
     ro.observe(img);
 
-    // initial measure
     updateImageMetrics();
 
     return () => ro.disconnect();
@@ -122,6 +125,7 @@ function EditArea() {
 
   // החלפת מצב "הוספת הצללה" ואיפוס טופס ההוספה
   const handleToggleAdd = () => {
+    if (!isAdmin) return alert("אין הרשאה להוסיף הצללה"); // RBAC
     setIsAdding((prev) => !prev);
     setNewShade({
       percentage: "",
@@ -135,19 +139,18 @@ function EditArea() {
 
   // קליק על המפה: חישוב נקודת ההנחה ביחס לתמונה המוצגת + המרה לטבעי
   const handleMapClick = (e) => {
+    if (!isAdmin) return; // RBAC
     if (!isAdding || !mapRef.current || !imgRef.current) return;
 
     const img = imgRef.current;
     const imgRect = img.getBoundingClientRect();
 
-    // מיקום הקליק בפיקסלים על התמונה המוצגת
     const clickXInImg = e.clientX - imgRect.left;
     const clickYInImg = e.clientY - imgRect.top;
 
     const maxX = imgRect.width - newShade.width;
     const maxY = imgRect.height - newShade.height;
 
-    // מיקום סופי
     const xWithinImg = Math.max(
       0,
       Math.min(clickXInImg - newShade.width / 2, maxX)
@@ -157,7 +160,6 @@ function EditArea() {
       Math.min(clickYInImg - newShade.height / 2, maxY)
     );
 
-    // // המרה מפיקסלים מוצגים לפיקסלים טבעיים של התמונה
     const scaleX = imgRect.width > 0 ? img.naturalWidth / imgRect.width : 1;
     const scaleY = imgRect.height > 0 ? img.naturalHeight / imgRect.height : 1;
 
@@ -176,6 +178,7 @@ function EditArea() {
   };
 
   const startEdit = () => {
+    if (!isAdmin) return alert("אין הרשאה לעריכת אזור"); // RBAC
     setEditMode(true);
     setEditableShades(shades.map((s) => ({ ...s })));
   };
@@ -205,6 +208,7 @@ function EditArea() {
 
   // שמירת עריכה 
   const saveEdit = async () => {
+    if (!isAdmin) return alert("אין הרשאה לשמור שינויים"); // RBAC
     try {
       const areaPayload = {
         name: areaData.name,
@@ -251,6 +255,7 @@ function EditArea() {
 
   // הוספת הצללה חדשה
   const handleSaveShade = async () => {
+    if (!isAdmin) return alert("אין הרשאה להוסיף הצללה"); // RBAC
     const { percentage, description, x, y, width, height } = newShade;
     if (!percentage || !description || x === null || y === null) {
       return alert("מלא את כל השדות לפני שמירה");
@@ -281,6 +286,7 @@ function EditArea() {
 
   // מחיקת הצללה
   const handleDeleteShade = async (idLike) => {
+    if (!isAdmin) return alert("אין הרשאה למחיקה"); // RBAC
     const id = idLike?.id ?? idLike?.ID ?? idLike; // be tolerant to API field names
     if (!id) return alert("אין מזהה להצללה למחיקה");
 
@@ -303,11 +309,9 @@ function EditArea() {
 
   const getBadgeStyle = (w, h) => {
     const minDim = Math.max(1, Math.min(Number(w) || 0, Number(h) || 0));
-    // font grows with size but stays within sensible bounds
     const font = Math.round(Math.max(12, Math.min(28, minDim * 0.22)));
     const padY = Math.round(Math.max(2, font * 0.25));
     const padX = Math.round(Math.max(6, font * 0.4));
-    // place the badge just above the marker
     const top = -(font + padY * 2 + 6);
     return {
       fontSize: `${font}px`,
@@ -334,11 +338,11 @@ function EditArea() {
           <div className="map" ref={mapRef} onClick={handleMapClick}>
             {areaData.path ? (
               <img
-                ref={imgRef} // ⬅️ add this
+                ref={imgRef}
                 src={`/uploads/${areaData.path}`}
                 alt="Map"
                 className="map-image"
-                onLoad={updateImageMetrics} // ⬅️ and this
+                onLoad={updateImageMetrics}
               />
             ) : (
               <p>🗺 כאן תופיע המפה שלך</p>
@@ -351,11 +355,12 @@ function EditArea() {
               const natH = Number(pick(shade, ["height", "Height"]));
               const pos = project(natX, natY, natW, natH);
 
+              const id = getId(shade, i);
               return (
                 <div
-                  key={getId(shade, i)}
+                  key={id}
                   className={`shade-marker ${
-                    hoveredId === getId(shade, i) ? "is-hovered" : ""
+                    hoveredId === id ? "is-hovered" : ""
                   }`}
                   style={{
                     left: `${pos.left}px`,
@@ -363,9 +368,9 @@ function EditArea() {
                     width: `${pos.width}px`,
                     height: `${pos.height}px`,
                   }}
-                  onMouseEnter={() => setHoveredId(getId(shade, i))}
+                  onMouseEnter={() => setHoveredId(id)}
                   onMouseLeave={() => setHoveredId(null)}
-                  onFocus={() => setHoveredId(getId(shade, i))}
+                  onFocus={() => setHoveredId(id)}
                   onBlur={() => setHoveredId(null)}
                   tabIndex={0}
                 >
@@ -386,25 +391,29 @@ function EditArea() {
                       <div className="shade-dot" style={{ "--pct": pct }} />
                     );
                   })()}
-                  <button
-                    className="shade-delete"
-                    aria-label="מחק הצללה"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleDeleteShade(shade);
-                    }}
-                    title="מחק"
-                  >
-                    <span className="trash-red">
-                      <TrashIcon size={14} />
-                    </span>
-                  </button>
+                  {/* כפתור מחיקה — רק לאדמין */}
+                  {isAdmin && ( // RBAC
+                    <button
+                      className="shade-delete"
+                      aria-label="מחק הצללה"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDeleteShade(shade);
+                      }}
+                      title="מחק"
+                    >
+                      <span className="trash-red">
+                        <TrashIcon size={14} />
+                      </span>
+                    </button>
+                  )}
                 </div>
               );
             })}
 
-            {/* תצוגה  של הצללה חדשה (במצב הוספה) */}
-            {isAdding &&
+            {/* תצוגה  של הצללה חדשה (במצב הוספה) — רק לאדמין */}
+            {isAdmin && // RBAC
+              isAdding &&
               newShade.x != null &&
               newShade.y != null &&
               (() => {
@@ -452,6 +461,7 @@ function EditArea() {
                 className="shade-input"
                 value={areaData.name}
                 onChange={(e) => handleAreaField("name", e.target.value)}
+                disabled={!isAdmin} // RBAC
               />
               <label className="field-label">תיאור האזור</label>
               <textarea
@@ -459,12 +469,15 @@ function EditArea() {
                 rows={3}
                 value={areaData.description}
                 onChange={(e) => handleAreaField("description", e.target.value)}
+                disabled={!isAdmin} // RBAC
               />
               <div className="panel-actions">
-                <button className="button" onClick={saveEdit}>
-                  {" "}
-                  שמור
-                </button>
+                {isAdmin && ( // RBAC
+                  <button className="button" onClick={saveEdit}>
+                    {" "}
+                    שמור
+                  </button>
+                )}
                 <button className="button" onClick={cancelEdit}>
                   בטל
                 </button>
@@ -476,7 +489,7 @@ function EditArea() {
                 <h2 className="panel-area-title">{areaData.name}</h2>
                 <p className="panel-area-desc">{areaData.description}</p>
               </div>
-              {!isAdding && (
+              {!isAdding && isAdmin && ( // RBAC
                 <div className="panel-actions">
                   <button className="button button-primary" onClick={startEdit}>
                     {" "}
@@ -494,8 +507,8 @@ function EditArea() {
             </>
           )}
 
-          {/* טופס הוספת הצללה בתוך הפאנל */}
-          {isAdding && (
+          {/* טופס הוספת הצללה בתוך הפאנל — רק לאדמין */}
+          {isAdmin && isAdding && ( // RBAC
             <div className="panel-sticky">
               <div className="shade-form">
                 <input
@@ -585,7 +598,7 @@ function EditArea() {
                 <tbody>
                   {(editMode ? editableShades : shades).length === 0 ? (
                     <tr>
-                      <td colSpan={2} className="empty-row">
+                      <td colSpan={3} className="empty-row">
                         אין הצללות להצגה
                       </td>
                     </tr>
@@ -607,7 +620,7 @@ function EditArea() {
                           tabIndex={0}
                         >
                           <td className="desc-cell" title={desc}>
-                            {editMode ? (
+                            {editMode && isAdmin ? ( // RBAC
                               <input
                                 className="shade-input"
                                 value={desc}
@@ -624,7 +637,7 @@ function EditArea() {
                             )}
                           </td>
                           <td className="pct-cell">
-                            {editMode ? (
+                            {editMode && isAdmin ? ( // RBAC
                               <input
                                 type="number"
                                 min="0"
@@ -644,17 +657,21 @@ function EditArea() {
                             )}
                           </td>
                           <td className="del-cell">
-                            <button
-                              className="table-delete"
-                              aria-label="מחק הצללה"
-                              title="מחק"
-                              onClick={() => handleDeleteShade(s)}
-                              disabled={editMode}
-                            >
-                              <span className="trash-red">
-                                <TrashIcon />
-                              </span>
-                            </button>
+                            {isAdmin ? ( // RBAC
+                              <button
+                                className="table-delete"
+                                aria-label="מחק הצללה"
+                                title="מחק"
+                                onClick={() => handleDeleteShade(s)}
+                                disabled={editMode}
+                              >
+                                <span className="trash-red">
+                                  <TrashIcon />
+                                </span>
+                              </button>
+                            ) : (
+                              "—"
+                            )}
                           </td>
                         </tr>
                       );
@@ -664,7 +681,7 @@ function EditArea() {
               </table>
             </div>
           </div>
-          
+
           {/* כפתור חזרה – מתחת לטבלה */}
           <div className="panel-footer">
             <button className="button" onClick={handleBack}>
