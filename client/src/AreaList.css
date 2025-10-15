@@ -67,11 +67,13 @@ body {
   flex-wrap: wrap;
 }
 
-.actions-row{
+.actions-row {
   display: flex;
-  justify-content: flex-end;
-  width: 100%;
-  margin-top: 24px;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin: 24px 0;
 }
 
 /* ================== כפתורים כלליים ================== */
@@ -285,6 +287,8 @@ body {
   font-weight: 700;
   box-shadow: 0 10px 24px rgba(0,0,0,.12);
 }
+
+
 .form-actions .submit-btn:hover,
 .submit-btn:hover{
   background: linear-gradient(135deg, #ffb26b 0%, #ff86b4 100%) !important;
@@ -293,6 +297,28 @@ body {
   transform: translateY(-1px);
   box-shadow: 0 12px 28px rgba(255,61,113,.35);
   border: 0 !important;
+}
+@media (max-width: 600px) {
+  .actions-row {
+    flex-direction: column;
+    align-items: center;
+  }
+  .actions-row .btn-hero.btn-primary {
+    width: 40vw;
+    min-width: 0;
+    font-size: 18px;
+    height: 48px;
+    margin-bottom: 10px;
+    box-sizing: border-box;
+  }
+}
+
+@media (max-width: 600px) {
+  .App {
+    max-height: 100vh;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
 }
 
 /* שורת העלאת קובץ */
@@ -330,16 +356,128 @@ body {
 .trash-btn:hover { background: #ef4444; color: #fff; border-color: #ef4444; }
 
 /* תצוגה מקדימה לתמונה */
-.image-preview{
-  display:block;
-  margin:10px auto 0;
-  width:min(100%, 280px);
-  height:160px;
-  object-fit:cover;
-  border-radius:10px;
-  box-shadow:0 6px 18px rgba(0,0,0,.12);
+.image-preview {
+  max-width: 320px;
+  max-height: 160px;
+  width: 100%;
+  height: auto;
+  display: block;
+  margin: 0 auto 16px auto;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  object-fit: cover;
 }
 
+/* גלילה פנימית לטופס */
+.form-container {
+  max-height: 90vh;
+  overflow-y: auto;
+  padding-bottom: 32px;
+}
+.admin-users-panel {
+  max-height: 300px;
+  overflow-y: auto;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  padding: 8px;
+  margin: 0 auto;
+  width: 95%;
+  display: flex;
+  flex-direction: column;
+  font-size: 12px;
+}
+
+.users-table {
+  min-width: 320px;
+  font-size: 11px;
+}
+
+.users-table th,
+.users-table td {
+  padding: 2px 4px;
+  font-size: 11px;
+}
+
+.admin-users-panel h3 {
+  font-size: 15px;
+  margin-bottom: 4px;
+}
+
+.btn-hero,
+.btn-hero.btn-primary {
+  font-size: 14px;
+  height: 36px;
+  padding: 6px 0;
+}
+
+/* ריווח לכפתורים בתחתית */
+.form-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  margin-top: 18px;
+  margin-bottom: 0;
+}
+  @media (max-width: 600px) {
+  .hero-card {
+  max-width: 400px;
+  margin: 32px auto;
+  background: #fff;
+  border-radius: 20px;
+  box-shadow: 0 2px 16px rgba(0,0,0,0.10);
+  padding: 24px 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* פאנל המשתמשים */
+.admin-users-panel {
+  width: 100%;
+  max-height: 220px;
+  overflow-y: auto;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  padding: 8px;
+  margin: 0 auto 0 auto;
+  font-size: 13px;
+  display: flex;
+  flex-direction: column;
+}
+
+/* גלילה אופקית לטבלה */
+.users-table-wrap {
+  width: 100%;
+  overflow-x: auto;
+}
+
+/* טבלה קטנה ונקייה */
+.users-table {
+  width: 100%;
+  font-size: 12px;
+  border-collapse: collapse;
+}
+
+.users-table th,
+.users-table td {
+  padding: 2px 4px;
+  font-size: 12px;
+  word-break: break-word;
+}
+
+/* כפתורים */
+.btn-hero,
+.btn-hero.btn-primary {
+  font-size: 15px;
+  height: 40px;
+  padding: 8px 0;
+  width: 100%;
+  margin-bottom: 10px;
+  border-radius: 12px;
+}
+}
 /* רשימת האזורים */
 .hero-card .areas-panel{
   position: static;

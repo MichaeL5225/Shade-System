@@ -282,15 +282,13 @@ function AreaList() {
             </div>
 
             {/* כפתורי ניהול */}
-            <div className="actions-row" style={{ gap: 12 }}>
+            <div className="actions-row" style={{ gap: 12, flexWrap: 'wrap' }}>
               {isAdmin && (
                 <>
                   <button className="btn-hero btn-primary" onClick={toggleForm}>
                     הוספת אזור
                   </button>
-
-                  {/* פתיחת/סגירת פאנל המשתמשים */}
-                  <button className="btn-hero" onClick={toggleUsersPanel}>
+                  <button className="btn-hero btn-primary" onClick={toggleUsersPanel}>
                     {showUsersPanel ? 'הסתר משתמשים' : 'משתמשים'}
                   </button>
                 </>
