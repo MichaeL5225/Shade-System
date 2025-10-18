@@ -193,7 +193,7 @@ html, body { margin: 0; overflow-x: hidden; }
 @media (orientation:portrait) and (max-width:1100px){
   html, body{ overflow-y:auto !important; }
   .area-row{ display:block !important; height:auto; min-height:100dvh; }
-  .map-wrap{ width:100%; height:100dvh; margin-top:calc(-1 * var(--header-h)); border-radius:0; overflow:hidden; }
+  .map-wrap{ width:100%; ; margin-top:calc(-1 * var(--header-h)); border-radius:0; overflow:hidden; }
   .map{ display:block; background:transparent; }
   .map, .map-image, .map-wrap > *{
     max-width:100%; max-height:100%; width:auto; height:auto; object-fit:contain; object-position:center; border-radius:0;

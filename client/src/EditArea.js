@@ -3,6 +3,12 @@ import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
 import "./EditArea.css";
 
+// ================== קבוע חשוב לתיקון הבעיה ==================
+// גודל תצוגה קבוע (בפיקסלים של המסך) להצללה חדשה בזמן "הוספה"
+// ממנו נגזור פעם אחת את הרוחב/גובה ב-natural px ביחס לתמונת המפה המוצגת.
+// כך אין הצטברות/תפיחה בלחיצות/צביטות חוזרות.
+const ADD_DISPLAY_SIZE = 30;
+
 // אייקון פח למחיקה
 const TrashIcon = ({ size = 16 }) => (
   <svg
@@ -35,10 +41,10 @@ function EditArea() {
   const [newShade, setNewShade] = useState({
     percentage: "",
     description: "",
-    x: null,
-    y: null,
-    width: 30,
-    height: 30,
+    x: null,      // natural
+    y: null,      // natural
+    width: null,  // natural — נשמר כ-natural בלבד; נגזר בפעם הראשונה מהתצוגה
+    height: null, // natural
   });
   const [hoveredId, setHoveredId] = useState(null);
   const getId = (s, idx) => s?.id ?? s?.ID ?? s?.Id ?? idx;
@@ -127,13 +133,14 @@ function EditArea() {
   const handleToggleAdd = () => {
     if (!isAdmin) return alert("אין הרשאה להוסיף הצללה"); // RBAC
     setIsAdding((prev) => !prev);
+    // איפוס ערכי natural כדי שבקליק הבא נגזור אותם מגודל התצוגה הקבוע (ADD_DISPLAY_SIZE)
     setNewShade({
       percentage: "",
       description: "",
       x: null,
       y: null,
-      width: 30,
-      height: 30,
+      width: null,   // natural יחושב על סמך ADD_DISPLAY_SIZE בפעם הראשונה
+      height: null,  // natural
     });
   };
 
@@ -148,32 +155,39 @@ function EditArea() {
     const clickXInImg = e.clientX - imgRect.left;
     const clickYInImg = e.clientY - imgRect.top;
 
-    const maxX = imgRect.width - newShade.width;
-    const maxY = imgRect.height - newShade.height;
-
-    const xWithinImg = Math.max(
-      0,
-      Math.min(clickXInImg - newShade.width / 2, maxX)
-    );
-    const yWithinImg = Math.max(
-      0,
-      Math.min(clickYInImg - newShade.height / 2, maxY)
-    );
-
+    // אם יש כבר רוחב/גובה טבעיים שהוזנו ידנית, נשמור עליהם;
+    // אחרת נגזור אותם *פעם אחת* מגודל תצוגה קבוע (ADD_DISPLAY_SIZE)
     const scaleX = imgRect.width > 0 ? img.naturalWidth / imgRect.width : 1;
     const scaleY = imgRect.height > 0 ? img.naturalHeight / imgRect.height : 1;
 
+    const natW =
+      Number.isFinite(newShade.width) && newShade.width > 0
+        ? Math.round(newShade.width)
+        : Math.round(ADD_DISPLAY_SIZE * scaleX);
+
+    const natH =
+      Number.isFinite(newShade.height) && newShade.height > 0
+        ? Math.round(newShade.height)
+        : Math.round(ADD_DISPLAY_SIZE * scaleY);
+
+    // מגבילים את נקודת ההנחה כך שהסימון לא יגלוש מהתמונה
+    const maxX = imgRect.width - natW / scaleX;
+    const maxY = imgRect.height - natH / scaleY;
+
+    const xWithinImg = Math.max(0, Math.min(clickXInImg - (natW / scaleX) / 2, maxX));
+    const yWithinImg = Math.max(0, Math.min(clickYInImg - (natH / scaleY) / 2, maxY));
+
     const natX = Math.round(xWithinImg * scaleX);
     const natY = Math.round(yWithinImg * scaleY);
-    const natW = Math.round((newShade.width || 0) * scaleX);
-    const natH = Math.round((newShade.height || 0) * scaleY);
 
+    // שימי לב: כאן אנחנו *לא* משתמשים ב-newShade.width/height שנגזרו קודם בתור תצוגה.
+    // במקום זה, שומרים ישירות את ה-natural (natW/natH) — ללא כפל חוזר.
     setNewShade((prev) => ({
       ...prev,
       x: natX,
       y: natY,
-      width: natW,
-      height: natH,
+      width: natW,   // נשמר natural
+      height: natH,  // נשמר natural
     }));
   };
 
@@ -230,8 +244,7 @@ function EditArea() {
         const origPct = orig.percentage ?? orig.Percentage ?? orig.percent;
         const curDesc = cur.description ?? cur.Description ?? "";
         const origDesc = orig.description ?? orig.Description ?? "";
-        if (String(curPct ?? "") !== String(origPct ?? ""))
-          next.percentage = Number(curPct) || 0;
+        if (String(curPct ?? "") !== String(origPct ?? "")) next.percentage = Number(curPct) || 0;
         if (curDesc !== origDesc) next.description = curDesc;
         if (Object.keys(next).length > 0) {
           await axios.put(`/api/shades/${id}`, next);
@@ -303,7 +316,7 @@ function EditArea() {
 
   const formatPercent = (v) => {
     const n = typeof v === "number" ? v : parseFloat(v);
-    if (!Number.isFinite(n)) return ""; // ← prevents %undefined
+    if (!Number.isFinite(n)) return "";
     return Number.isInteger(n) ? `${n}%` : `${n.toFixed(1)}%`;
   };
 
@@ -359,9 +372,7 @@ function EditArea() {
               return (
                 <div
                   key={id}
-                  className={`shade-marker ${
-                    hoveredId === id ? "is-hovered" : ""
-                  }`}
+                  className={`shade-marker ${hoveredId === id ? "is-hovered" : ""}`}
                   style={{
                     left: `${pos.left}px`,
                     top: `${pos.top}px`,
@@ -381,18 +392,12 @@ function EditArea() {
                     {formatPercent(pick(shade, ["percentage", "Percentage"]))}
                   </span>
                   {(() => {
-                    const raw = pick(shade, [
-                      "percentage",
-                      "Percentage",
-                      "percent",
-                    ]);
+                    const raw = pick(shade, ["percentage", "Percentage", "percent"]);
                     const pct = Math.max(0, Math.min(100, Number(raw) || 0));
-                    return (
-                      <div className="shade-dot" style={{ "--pct": pct }} />
-                    );
+                    return <div className="shade-dot" style={{ "--pct": pct }} />;
                   })()}
                   {/* כפתור מחיקה — רק לאדמין */}
-                  {isAdmin && ( // RBAC
+                  {isAdmin && (
                     <button
                       className="shade-delete"
                       aria-label="מחק הצללה"
@@ -411,8 +416,8 @@ function EditArea() {
               );
             })}
 
-            {/* תצוגה  של הצללה חדשה (במצב הוספה) — רק לאדמין */}
-            {isAdmin && // RBAC
+            {/* תצוגה של הצללה חדשה (במצב הוספה) — רק לאדמין */}
+            {isAdmin &&
               isAdding &&
               newShade.x != null &&
               newShade.y != null &&
@@ -420,8 +425,8 @@ function EditArea() {
                 const pos = project(
                   newShade.x,
                   newShade.y,
-                  newShade.width,
-                  newShade.height
+                  newShade.width ?? 0,
+                  newShade.height ?? 0
                 );
                 return (
                   <div
@@ -472,15 +477,10 @@ function EditArea() {
                 disabled={!isAdmin} // RBAC
               />
               <div className="panel-actions">
-                {isAdmin && ( // RBAC
-                  <button className="button" onClick={saveEdit}>
-                    {" "}
-                    שמור
-                  </button>
+                {isAdmin && (
+                  <button className="button" onClick={saveEdit}> שמור </button>
                 )}
-                <button className="button" onClick={cancelEdit}>
-                  בטל
-                </button>
+                <button className="button" onClick={cancelEdit}> בטל </button>
               </div>
             </>
           ) : (
@@ -489,26 +489,17 @@ function EditArea() {
                 <h2 className="panel-area-title">{areaData.name}</h2>
                 <p className="panel-area-desc">{areaData.description}</p>
               </div>
-              {!isAdding && isAdmin && ( // RBAC
+              {!isAdding && isAdmin && (
                 <div className="panel-actions">
-                  <button className="button button-primary" onClick={startEdit}>
-                    {" "}
-                    עריכת אזור
-                  </button>
-                  <button
-                    className="button button-primary"
-                    onClick={handleToggleAdd}
-                  >
-                    {" "}
-                    הוספת הצללה
-                  </button>
+                  <button className="button button-primary" onClick={startEdit}> עריכת אזור </button>
+                  <button className="button button-primary" onClick={handleToggleAdd}> הוספת הצללה </button>
                 </div>
               )}
             </>
           )}
 
           {/* טופס הוספת הצללה בתוך הפאנל — רק לאדמין */}
-          {isAdmin && isAdding && ( // RBAC
+          {isAdmin && isAdding && (
             <div className="panel-sticky">
               <div className="shade-form">
                 <input
@@ -529,7 +520,7 @@ function EditArea() {
                 />
                 <input
                   type="number"
-                  placeholder="X"
+                  placeholder="X (natural)"
                   value={newShade.x ?? ""}
                   onChange={(e) =>
                     setNewShade({ ...newShade, x: parseInt(e.target.value) })
@@ -537,7 +528,7 @@ function EditArea() {
                 />
                 <input
                   type="number"
-                  placeholder="Y"
+                  placeholder="Y (natural)"
                   value={newShade.y ?? ""}
                   onChange={(e) =>
                     setNewShade({ ...newShade, y: parseInt(e.target.value) })
@@ -545,8 +536,8 @@ function EditArea() {
                 />
                 <input
                   type="number"
-                  placeholder="רוחב"
-                  value={newShade.width}
+                  placeholder="רוחב (natural)"
+                  value={newShade.width ?? ""}
                   onChange={(e) =>
                     setNewShade({
                       ...newShade,
@@ -556,8 +547,8 @@ function EditArea() {
                 />
                 <input
                   type="number"
-                  placeholder="גובה"
-                  value={newShade.height}
+                  placeholder="גובה (natural)"
+                  value={newShade.height ?? ""}
                   onChange={(e) =>
                     setNewShade({
                       ...newShade,
@@ -565,15 +556,10 @@ function EditArea() {
                     })
                   }
                 />
-                <button className="button" onClick={handleSaveShade}>
-                  {" "}
-                  שמור{" "}
-                </button>
-                <button className="button" onClick={handleToggleAdd}>
-                  {" "}
-                  בטל
-                </button>
+                <button className="button" onClick={handleSaveShade}> שמור </button>
+                <button className="button" onClick={handleToggleAdd}> בטל </button>
               </div>
+              
             </div>
           )}
 
@@ -582,8 +568,7 @@ function EditArea() {
               <h3>הצללות</h3>
             </div>
             <div className="panel-subtitle">
-              מספר ההצללות באזור –{" "}
-              {editMode ? editableShades.length : shades.length}
+              מספר ההצללות באזור – {editMode ? editableShades.length : shades.length}
             </div>
 
             <div className="panel-table-wrap">
@@ -598,38 +583,30 @@ function EditArea() {
                 <tbody>
                   {(editMode ? editableShades : shades).length === 0 ? (
                     <tr>
-                      <td colSpan={3} className="empty-row">
-                        אין הצללות להצגה
-                      </td>
+                      <td colSpan={3} className="empty-row">אין הצללות להצגה</td>
                     </tr>
                   ) : (
                     (editMode ? editableShades : shades).map((s, idx) => {
-                      const desc =
-                        pick(s, ["description", "Description"]) ?? "";
+                      const desc = pick(s, ["description", "Description"]) ?? "";
                       const pct = pick(s, ["percentage", "Percentage"]);
+                      const rowId = getId(s, idx);
                       return (
                         <tr
-                          key={getId(s, idx)}
-                          className={`shade-row ${
-                            hoveredId === getId(s, idx) ? "is-hovered" : ""
-                          }`}
-                          onMouseEnter={() => setHoveredId(getId(s, idx))}
+                          key={rowId}
+                          className={`shade-row ${hoveredId === rowId ? "is-hovered" : ""}`}
+                          onMouseEnter={() => setHoveredId(rowId)}
                           onMouseLeave={() => setHoveredId(null)}
-                          onFocus={() => setHoveredId(getId(s, idx))}
+                          onFocus={() => setHoveredId(rowId)}
                           onBlur={() => setHoveredId(null)}
                           tabIndex={0}
                         >
                           <td className="desc-cell" title={desc}>
-                            {editMode && isAdmin ? ( // RBAC
+                            {editMode && isAdmin ? (
                               <input
                                 className="shade-input"
                                 value={desc}
                                 onChange={(e) =>
-                                  handleShadeField(
-                                    idx,
-                                    "description",
-                                    e.target.value
-                                  )
+                                  handleShadeField(idx, "description", e.target.value)
                                 }
                               />
                             ) : (
@@ -637,7 +614,7 @@ function EditArea() {
                             )}
                           </td>
                           <td className="pct-cell">
-                            {editMode && isAdmin ? ( // RBAC
+                            {editMode && isAdmin ? (
                               <input
                                 type="number"
                                 min="0"
@@ -645,11 +622,7 @@ function EditArea() {
                                 className="percent-input"
                                 value={pct ?? ""}
                                 onChange={(e) =>
-                                  handleShadeField(
-                                    idx,
-                                    "percentage",
-                                    e.target.value
-                                  )
+                                  handleShadeField(idx, "percentage", e.target.value)
                                 }
                               />
                             ) : (
@@ -657,7 +630,7 @@ function EditArea() {
                             )}
                           </td>
                           <td className="del-cell">
-                            {isAdmin ? ( // RBAC
+                            {isAdmin ? (
                               <button
                                 className="table-delete"
                                 aria-label="מחק הצללה"
@@ -684,10 +657,7 @@ function EditArea() {
 
           {/* כפתור חזרה – מתחת לטבלה */}
           <div className="panel-footer">
-            <button className="button" onClick={handleBack}>
-              {" "}
-              חזרה
-            </button>
+            <button className="button" onClick={handleBack}> חזרה </button>
           </div>
         </aside>
       </div>

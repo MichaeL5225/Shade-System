@@ -51,12 +51,14 @@ body {
   flex-direction: column;
   align-items: center;
   gap: 12px;
+  max-height: 82vh;
 }
 
 .hero-title {
   margin: 0 0 5px;
   font-weight: 800;
   font-size: 40px;
+  font-family: 'Rubik', sans-serif;
 }
 
 .hero-actions {
@@ -135,11 +137,44 @@ body {
 .btn.delete { background: #fee2e2; color: #991b1b; border:1px solid #fecaca; }
 .btn.delete:hover { background: #ef4444; color: #fff; border-color: #ef4444; }
 
-/* ================== פאנל רשימת אזורים ================== */
-.areas-panel{
-  direction: ltr;
+/* ================== פס "ברוך הבא" ================== */
+.welcome-strip {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  display: inline-flex;
+  padding: 10px 16px;
+  background: rgba(255, 255, 255, 0.65);
+  backdrop-filter: blur(6px);
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  box-shadow: 0 6px 20px rgba(0,0,0,.12);
+  z-index: 100;
+}
+.welcome-inner { font-weight: 900; font-size: 28px; color: #0f172a; }
+
+/* ================== רשימת אזורים ================== */
+.hero-card .areas-panel{
+  --area-row-h: 64px;
+  --search-block-h: 88px;
+  position: static;
+  width: 100%;
+  flex: 1 1 auto;
+  height: calc(var(--search-block-h) + (var(--area-row-h) * 3));
+  max-height: calc(var(--search-block-h) + (var(--area-row-h) * 3));
+  background: transparent !important;
+  border: none !important;
+  border-radius: 12px;
+  padding: 12px 0 0;
+  box-shadow: none;
+  margin-top: 16px;
+  text-align: right;
   overflow-y: auto;
   overflow-x: hidden;
+}
+
+.areas-panel{
+  direction: ltr;
   scrollbar-width: thin;
   scrollbar-color: rgba(0,0,0,0.25) transparent;
 }
@@ -149,7 +184,6 @@ body {
 .areas-panel:hover::-webkit-scrollbar-thumb{ background: rgba(0,0,0,0.28); }
 .areas-panel::-webkit-scrollbar-thumb:hover{ background: rgba(0,0,0,0.35); }
 
-/* חיפוש */
 .areas-panel .search-bar{
   display: block; 
   width: 85%;
@@ -170,7 +204,6 @@ body {
   box-shadow: 0 0 0 3px rgba(148,163,184,.25);
 }
 
-/* פריטי רשימה */
 .areas-panel .search-bar,
 .areas-panel .area-item{
   direction: rtl;
@@ -189,17 +222,21 @@ body {
   justify-content: space-between;
   box-sizing: border-box;
 }
-
 .areas-panel .area-item a,
 .areas-panel .area-item span{
   font-size: 16px;
-  font-weight: 600;
+  font-weight: 700;
   line-height: 1.35;
   color: #1e293b;
   text-decoration: none;
 }
-
 .areas-panel .area-item:hover{ background: #f1f5f9; }
+
+.empty-state{
+  text-align: center;
+  color: #64748b;
+  padding: 12px 0;
+}
 
 /* ================== טופס הוספת אזור ================== */
 .form-container {
@@ -213,15 +250,16 @@ body {
   display: flex;
   flex-direction: column;
   gap: 12px;
+  overflow-y: auto;
+  padding-bottom: 32px;
 }
-
 .form-title {
   margin: 0 0 8px;
   text-align: center;
   font-weight: 800;
   font-size: 28px;
+  font-family: 'Rubik', sans-serif;
 }
-
 .form-body {
   display: flex;
   flex-direction: column;
@@ -229,7 +267,6 @@ body {
   gap: 10px;
 }
 
-/* קלטים בטופס */
 .form-container input,
 .form-container textarea {
   width: 100%;
@@ -243,30 +280,19 @@ body {
   background: #fff;
 }
 .form-container input::placeholder,
-.form-container textarea::placeholder{
-  font-family: 'Assistant', sans-serif;
-  font-weight: 400;
-}
+.form-container textarea::placeholder{ font-family: 'Assistant', sans-serif; font-weight: 400; }
 .form-container textarea { height: 110px; resize: none; }
-
 .form-body input[type="text"],
-.form-body textarea{
-  max-width:540px;
-  margin:0 auto;
-}
+.form-body textarea{ max-width:540px; margin:0 auto; }
 
-/* העלאת קובץ */
-.form-body input[type="file"]{
-  width:auto;
-  align-self:center;
-}
+.form-body input[type="file"]{ width:auto; align-self:center; }
 
-/* פעולות בטופס */
 .form-actions {
   margin-top: 8px;
   display: flex;
-  justify-content: space-between;
+  justify-content: center;
   align-items: center;
+  gap: 12px;
   direction: rtl;
 }
 
@@ -290,7 +316,6 @@ body {
   font-weight: 700;
   box-shadow: 0 10px 24px rgba(0,0,0,.12);
 }
-
 .form-actions .submit-btn:hover,
 .submit-btn:hover{
   background: linear-gradient(135deg, #ffb26b 0%, #ff86b4 100%) !important;
@@ -301,14 +326,7 @@ body {
   border: 0 !important;
 }
 
-/* גלילה פנימית לטופס */
-.form-container {
-  max-height: 90vh;
-  overflow-y: auto;
-  padding-bottom: 32px;
-}
-
-/* ===== Users panel – בסיס ===== */
+/* ================== לוח משתמשים (אדמין) ================== */
 .admin-users-panel {
   max-height: 300px;
   overflow-y: auto;
@@ -322,88 +340,111 @@ body {
   flex-direction: column;
   font-size: 12px;
 }
+.admin-users-panel h3 { font-size: 15px; margin-bottom: 4px; }
 
-.users-table {
-  min-width: 320px;
-  font-size: 11px;
+.users-table { min-width: 320px; font-size: 11px; }
+.users-table th, .users-table td { padding: 2px 4px; font-size: 11px; }
+
+.users-subtitle{
+  margin: 0;
+  font-size: 22px;
+  font-weight: 800;
+  text-align: center;
 }
 
-.users-table th,
-.users-table td {
-  padding: 2px 4px;
-  font-size: 11px;
-}
-
-.admin-users-panel h3 {
-  font-size: 15px;
-  margin-bottom: 4px;
-}
-
-/* כפתורי הירו – גרסת בסיס */
-.btn-hero,
-.btn-hero.btn-primary {
-  font-size: 14px;
-  height: 36px;
-  padding: 6px 0;
-}
-
-/* ריווח לכפתורים בתחתית */
-.form-actions {
-  display: flex;
-  gap: 12px;
-  justify-content: center;
-  margin-top: 18px;
-  margin-bottom: 0;
-}
-
-/* רשימת האזורים (בסיס) */
-.hero-card .areas-panel{
-  position: static;
-  width: 100%;
-  max-height: 50vh;
-  background: transparent !important;
-  border: none !important;
+/* גרסת דסקטופ משודרגת */
+.admin-users-panel--lg{
+  width: 94%;
+  max-width: 1160px;
+  margin: 2px auto 8px auto;
+  background: #fff;
   border-radius: 12px;
-  padding: 12px 0 0;
-  box-shadow: none;
-  margin-top: 16px;
-  text-align: right;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.10);
+  padding: 12px 20px;
+  max-height: 62vh;
+  overflow: auto;
+  font-size: 18px;
+}
+
+.users-table--lg{
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 19px;
+}
+.users-table--lg th{
+  font-size: 20px;
+  font-weight: 800;
+  color: #0f172a;
+}
+.users-table--lg th,
+.users-table--lg td{
+  padding: 14px 16px;
+  border-bottom: 1px solid #e9edf3;
+  vertical-align: middle;
+  line-height: 1.45;
+}
+.users-table--lg .col-id{ text-align: center; width: 90px; }
+.users-table--lg .col-username{ text-align: start; }
+.users-table--lg .col-email{ text-align: start; }
+.users-table--lg .col-phone{ text-align: start; }
+.users-table--lg .col-role{ text-align: center; width: 200px; }
+.users-table--lg .col-trash{ text-align: center; width: 80px; }
+.users-table--lg select{
+  width: 100%;
+  height: 42px;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+}
+
+/* עיטוף הטבלה כדי לשלוט בכמות שורות נראות */
+.users-table-wrap{
+  --rowH: 68px;
+  --headH: 62px;
+  height: calc(var(--rowH) * 6 + var(--headH));
   overflow-y: auto;
   overflow-x: hidden;
+  scrollbar-width: thin;
+}
+.users-table--lg tbody tr{ height: var(--rowH); }
+.users-table--lg thead th{
+  position: sticky;
+  top: 0;
+  background: #fff;
+  z-index: 1;
 }
 
-.empty-state{
-  text-align: center;
-  color: #64748b;
-  padding: 12px 0;
+/* פעולות מתחת לטבלה */
+.users-cta-row{
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 16px;
+  margin: 10px 0 6px 0;
+  width: 88%;
+  max-width: 980px;
+  margin-left: auto;
+  margin-right: auto;
 }
 
-/* פס "ברוך הבא" קבוע */
-.welcome-strip {
-  position: fixed;
-  top: 20px;
-  right: 20px;
-  display: inline-flex;
-  padding: 10px 16px;
-  background: rgba(255, 255, 255, 0.65);
-  backdrop-filter: blur(6px);
-  border: 1px solid #e2e8f0;
-  border-radius: 12px;
-  box-shadow: 0 6px 20px rgba(0,0,0,.12);
-  z-index: 100;
-}
-.welcome-inner { font-weight: 900; font-size: 28px; color: #0f172a; }
-
-/* כפתור הוספה */
-.btn-hero.btn-primary{
-  min-width: 150px;
-  height: 42px;
-  font-size: 15px;
-  padding: 0 16px;
-  border-radius: 12px;
+.users-back-row{
+  width: auto;
+  align-self: flex-start;
+  margin: 10px 0 0 24px;
+  display: flex;
+  direction: ltr;
+  justify-content: flex-start;
 }
 
-/* כפתור מחיקת אזור */
+/* מצב Users על גבי כרטיס */
+.hero-card.users-mode{ 
+  gap: 0; 
+  width: min(86vw, 1200px);
+  padding: 28px 28px 140px;
+  border-radius: 18px;
+  padding-block-end: 50px !important; 
+}
+
+/* כפתור מחיקת אזור/משתמש */
 .trash-icon-btn{
   width: 36px;
   height: 36px;
@@ -422,630 +463,213 @@ body {
 .trash-icon-btn:hover{ background: #fee2e2; border-color: #fecaca; color: #b91c1c; }
 .trash-icon-btn:active{ transform: translateY(1px); }
 
-.hero-title,
-.form-title { font-family: 'Rubik', sans-serif; font-weight: 700; }
-
+/* טיפוגרפיה */
 .areas-panel .area-item a,
 .areas-panel .area-item span { font-family: 'Assistant', sans-serif; font-weight: 700; }
 
-/* ===== Users panel – גרסה קומפקטית יותר ונקייה (בסיס) ===== */
-/* === דסקטופ – הגדלת מעטפת הטבלה והטבלה עצמה (רק כאן) === */
-.admin-users-panel--lg{
-  width: 94%;
-  max-width: 1160px;          /* היה 860px */
-  margin: 2px auto 8px auto;
-  background: #fff;
-  border-radius: 12px;
-  box-shadow: 0 6px 18px rgba(0,0,0,0.10);
-  padding: 12px 20px;         /* היה 10px 16px */
-  max-height: 62vh;           /* היה 54vh */
-  overflow: auto;
-  font-size: 18px;
-}
-
-.users-subtitle{
-  margin: 0;
-  font-size: 22px;
-  font-weight: 800;
-  text-align: center;
-}
-
-.users-table--lg{
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 19px;            /* היה 18px */
-}
-.users-table--lg th{
-  font-size: 20px;            /* היה 18px */
-  font-weight: 800;
-  color: #0f172a;
-}
-.users-table--lg th,
-.users-table--lg td{
-  padding: 14px 16px;         /* היה 12px 14px */
-  border-bottom: 1px solid #e9edf3;
-  vertical-align: middle;
-  line-height: 1.45;          /* מעט יותר מרווח */
-}
-.users-table--lg .col-id{ text-align: center; width: 90px; }  /* היה 80px */
-.users-table--lg .col-username{ text-align: start; }
-.users-table--lg .col-email{ text-align: start; }
-.users-table--lg .col-phone{ text-align: start; }
-.users-table--lg .col-role{ text-align: center; width: 200px; } /* היה 170px */
-.users-table--lg .col-trash{ text-align: center; width: 80px; }  /* היה 70px */
-
-.users-table--lg select{
-  width: 100%;
-  height: 42px;               /* היה 40px */
-  border: 1px solid #e2e8f0;
-  border-radius: 10px;
-}
-
-/* CTA – רענן/עריכה – מתחת לטבלה ובמרכז */
-.users-cta-row{
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 16px;                  /* היה 14px */
-  margin: 10px 0 6px 0;
-  width: 88%;                 /* היה 86% */
-  max-width: 980px;           /* היה 760px */
-  margin-left: auto;
-  margin-right: auto;
-}
-
-/* כפתור חזרה – מחוץ לבלוק הטבלה */
-.users-back-row{
-  width: auto;
-  align-self: flex-start;
-  margin: 10px 0 0 24px;
-  display: flex;
-  direction: ltr;
-  justify-content: flex-start;
-}
-
-.hero-card.users-mode{ 
-  gap: 0; 
-  width: min(86vw, 1200px);   /* הרחבת המעטפת בדסקטופ */
-  padding: 28px 28px 140px;   /* מקום נוח לכפתורים בתחתית */
-  border-radius: 18px;
-  padding-block-end: 50px !important; 
-}
-
-.users-cta-row.users-cta-row--compact{
-  display: flex;
-  gap: 12px;
-  justify-content: center;
-  align-items: center;
-  width: 84%;
-  max-width: 700px;
-  margin: 10px auto 6px auto;
-  direction: rtl;
-}
-
-.btn-hero--users{
-  min-width: 180px;           /* היה 150px */
-  height: 48px;               /* היה 44px */
-  font-size: 16px;
-  padding: 0 16px;
-  border-radius: 12px;
-}
-
-.users-cta-row .back-btn{
-  height: 48px;               /* היה 44px */
-  min-width: 180px;           /* היה 150px */
-  font-size: 16px;
-  border-radius: 12px;
-}
-
-.users-cta-row--compact.editing{ gap: 10px; }
-.users-cta-row--compact.editing .btn-hero--users{
-  min-width: 130px;           /* היה 120px */
-  height: 42px;               /* היה 40px */
+/* התאמות כפתורי הירו בסיס */
+.btn-hero,
+.btn-hero.btn-primary {
   font-size: 14px;
-  padding: 0 12px;
-}
-.users-cta-row--compact.editing .back-btn{
-  min-width: 130px;           /* היה 120px */
-  height: 42px;               /* היה 40px */
-  font-size: 14px;
-  padding: 0 12px;
+  height: 36px;
+  padding: 6px 0;
 }
 
-/* גובה קבוע ל-wrap של הטבלה – בדסקטופ מציג יותר שורות בנוחות */
-.users-table-wrap{
-  --rowH: 68px;               /* היה 64px */
-  --headH: 62px;              /* היה 56px */
-  height: calc(var(--rowH) * 6 + var(--headH));  /* היה 2 שורות */
-  overflow-y: auto;
-  overflow-x: hidden;
-  scrollbar-width: thin;
-}
-.users-table--lg tbody tr{ height: var(--rowH); }
-.users-table--lg thead th{
-  position: sticky;
-  top: 0;
-  background: #fff;
-  z-index: 1;
-}
-
+/* ריווח לכפתורים בתחתית */
 .actions-row--bottom{ margin-top: 14px; }
 
-.hero-card{
-  max-height: 82vh;              
-  display: flex;
-  flex-direction: column;
-}
+/* ===== טריק קטן: התמונה מקדימה, הטבלה מיד אחריה ===== */
+.image-preview { display:block; margin: 0 auto 10px; }
+.image-preview + .admin-users-panel--lg,
+.image-preview + .users-table-wrap { margin-top: 8px !important; }
 
-.hero-card .areas-panel{
-  --area-row-h: 64px;
-  --search-block-h: 88px;
-  flex: 1 1 auto;               
-  height: calc(var(--search-block-h) + (var(--area-row-h) * 3));                 
-  max-height: calc(var(--search-block-h) + (var(--area-row-h) * 3));              
-  overflow-y: auto;              
-  overflow-x: hidden;
-}
-
-.areas-panel .actions-row--bottom{
-  position: sticky;
-  bottom: 0;
-  padding: 10px 0;
-  margin-top: 8px;
-  z-index: 1;
-}
-
-/* ================== MEDIA QUERIES (למטה בלבד) ================== */
-
-/* ≤600px – כרטיס וגזרת משתמשים */
-@media (max-width: 600px) {
+/* ================== MOBILE (≤768px) — ברייקפוינט יחיד ================== */
+@media (max-width: 768px) {
   html, body { height: 100dvh; overflow: hidden; }
 
-  .App:has(.hero-card.users-mode) { 
-    padding: 0; overflow-y: hidden; overflow-x: hidden; background-color: transparent !important; align-items: center; justify-content: center; min-height: 100dvh; 
-  }
-  .App:has(.hero-card.users-mode) .welcome-strip { display: none !important; }
-  .App:has(.hero-card.users-mode) .hero { padding: 0 !important; align-items: center; justify-content: center; height: 100dvh; min-height: 100dvh; }
-  .hero-card.users-mode{ 
-    position: static; width: min(90vw, 420px) !important; max-width: 420px; height: auto !important; min-height: auto !important; margin: 0 auto !important;
-    border-radius: 18px !important; box-shadow: 0 12px 36px rgba(0,0,0,.18); background: rgba(255, 255, 255, 0.95); padding: 20px 16px 160px;
-    display: flex; flex-direction: column; gap: 10px; z-index: 9999;
+  .App { 
+    padding: 0; 
+    overflow: hidden; 
+    align-items: center; 
+    justify-content: center; 
+    min-height: 100dvh; 
+    background-color: transparent !important;
   }
 
-  .hero-card.users-mode .hero-title { margin: 0 0 8px; font-size: 28px; }
-  .hero-card.users-mode .users-subtitle { font-size: 22px; margin: -2px 0 8px; }
+  .welcome-strip { display: none !important; }
+
+  .hero { padding: 0 !important; align-items: center; justify-content: center; height: 100dvh; min-height: 100dvh; }
+
+  /* כרטיס רגיל */
+  .hero-card {
+    width: min(88vw, 420px);
+    max-width: 420px;
+    padding: 16px 14px 20px;
+    margin: 0 auto;
+    border-radius: 16px;
+    gap: 10px;
+  }
+  .hero-title { font-size: 26px; margin: 0 0 8px; }
+
+  /* רשימת אזורים בכרטיס */
+  .hero-card .areas-panel{
+    --area-row-h: 60px;
+    --search-block-h: 80px;
+    width: 100%;
+    flex: 0 0 auto;
+    height: calc(var(--search-block-h) + (var(--area-row-h) * 3));
+    max-height: calc(var(--search-block-h) + (var(--area-row-h) * 3));
+    margin-top: 8px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding-top: 0;
+  }
+  .areas-panel .search-bar{
+    width: 92%;
+    height: 36px; 
+    font-size: 14px; 
+    padding: 6px 10px; 
+    margin: 0 auto 8px;
+  }
+  .areas-panel .area-item{ padding: 10px 8px; }
+  .areas-panel .area-item a,
+  .areas-panel .area-item span{ font-size: 16px; line-height: 1.4; }
+
+  /* טופס */
+  .form-container{
+    width: min(90vw, 420px);
+    padding: 14px 16px;
+    margin: 72px auto 28px;
+    max-height: calc(100dvh - 72px - 28px);
+    overflow: auto;
+    border-radius: 14px;
+  }
+  .form-title{ font-size: 22px; margin: 0 0 8px; }
+  .form-body{ gap: 8px; }
+  .form-container input, 
+  .form-container textarea{ padding: 10px; font-size: 14px; }
+  .form-body input[type="text"],
+  .form-body textarea{ max-width: 94%; margin: 0 auto; box-sizing: border-box; }
+  .image-preview{ width: min(100%, 280px); height: 158px; margin-top: 8px; }
+
+  .back-btn, .submit-btn{ height: 40px; min-width: 120px; font-size: 14px; }
+
+  /* מצב USERS במובייל */
+  .hero-card.users-mode{ 
+    position: static; 
+    width: min(92vw, 420px) !important; 
+    max-width: 420px; 
+    height: auto !important; 
+    min-height: auto !important; 
+    margin: 0 auto !important;
+    border-radius: 18px !important; 
+    box-shadow: 0 12px 36px rgba(0,0,0,.18); 
+    background: rgba(255, 255, 255, 0.95); 
+    padding: 18px 14px 140px; /* מקום לכפתורים התחתונים */
+    display: flex; 
+    flex-direction: column; 
+    gap: 10px; 
+    z-index: 1;
+  }
+  .hero-card.users-mode .hero-title { font-size: 26px; margin: 0 0 8px; }
+  .hero-card.users-mode .users-subtitle { font-size: 18px; margin: -2px 0 8px; }
 
   .hero-card.users-mode .admin-users-panel--lg {
-    width: 100%; max-width: none; padding: 0; margin: 16px 8px 0; flex: 0 0 auto; display: flex; 
-    flex-direction: column; background: #fff; border-radius: 16px; overflow: hidden;
-  }
-  .hero-card.users-mode .users-table-wrap { 
-    --rowH: 60px; --headH: 56px; max-height: calc(var(--rowH) * 5 + var(--headH)); height: auto;  flex: 0 0 auto; 
-    overflow-x: hidden; overflow-y: auto; width: 100%; padding-inline: 0; box-sizing: border-box; margin-inline: auto; scrollbar-gutter: stable both-edges;
+    width: 100%; 
+    max-width: none; 
+    padding: 0; 
+    margin: 12px 0 0; 
+    flex: 0 0 auto; 
+    display: flex; 
+    flex-direction: column; 
+    background: #fff; 
+    border-radius: 16px; 
+    overflow: hidden;
   }
 
-  .hero-card.users-mode .users-table--lg {
-    width: 100%; table-layout: fixed; border-collapse: collapse; font-size: 12px; min-width: 100px; margin-inline: auto;
+  .hero-card.users-mode .users-table-wrap { 
+    --rowH: 58px; 
+    --headH: 54px; 
+    max-height: calc(var(--rowH) * 5 + var(--headH)); 
+    height: auto;  
+    flex: 0 0 auto; 
+    overflow-x: hidden; 
+    overflow-y: auto; 
+    width: 100%; 
+    padding-inline: 0; 
+    box-sizing: border-box; 
+    margin-inline: auto; 
+    scrollbar-gutter: stable both-edges;
   }
-  .hero-card.users-mode .users-table--lg th, .hero-card.users-mode .users-table--lg td {
-    white-space: nowrap; text-overflow: ellipsis; overflow: hidden; padding: 6px 8px;
+  .hero-card.users-mode .users-table--lg {
+    width: 100%; 
+    table-layout: fixed; 
+    border-collapse: collapse; 
+    font-size: 12px; 
+    margin-inline: auto;
+  }
+  .hero-card.users-mode .users-table--lg th, 
+  .hero-card.users-mode .users-table--lg td {
+    white-space: nowrap; 
+    text-overflow: ellipsis; 
+    overflow: hidden; 
+    padding: 6px 8px;
   }
   .hero-card.users-mode .users-table--lg th { font-size: 14px; }
   .hero-card.users-mode .users-table--lg thead th{ position: static !important; background: inherit; }
 
-  .hero-card.users-mode .users-table--lg .col-id{ width: 10%; text-align: center; }
-  .hero-card.users-mode .users-table--lg .col-username{ width: 18%; }
-  .hero-card.users-mode .users-table--lg .col-email{ width: 20%; }
-  .hero-card.users-mode .users-table--lg .col-phone{ width: 18%; }
-  .hero-card.users-mode .users-table--lg .col-role{ width: 17%; text-align: center; }
-  .hero-card.users-mode .users-table--lg .col-trash{ 
-    width: 7%; min-width: 34px;  text-align: center; position: static !important; left: auto !important; 
-    background: transparent !important; box-shadow: none !important; padding-left: 50px; overflow: visible !important;
-    text-overflow: clip !important; white-space: normal !important; font-size: 0;
-  }
-  .hero-card.users-mode .users-table--lg th.col-trash{ overflow: visible !important; text-overflow: clip !important; white-space: nowrap !important; }
+  /* רוחבי עמודות במובייל */
+  .hero-card.users-mode .users-table--lg .col-id{ width: 12%; text-align: center; }
+  .hero-card.users-mode .users-table--lg .col-username{ width: 22%; }
+  .hero-card.users-mode .users-table--lg .col-email{ width: 28%; }
+  .hero-card.users-mode .users-table--lg .col-phone{ width: 20%; }
+  .hero-card.users-mode .users-table--lg .col-role{ width: 12%; text-align: center; }
+  .hero-card.users-mode .users-table--lg .col-trash{ width: 6%; min-width: 34px; text-align: center; }
+  .hero-card.users-mode .users-table--lg .col-role select{ width: 100%; height: 32px; font-size: 12px; }
+  .hero-card.users-mode .users-table--lg .col-trash .trash-icon-btn{ width: 32px; height: 32px; font-size: 16px; }
 
-  .hero-card.users-mode .users-table--lg .col-trash .trash-icon-btn{ margin-left: 10px; }
-
-  .hero-card.users-mode .users-table--lg .col-role select{
-    width: 100%; height: 32px; font-size: 12px;
-  }
-
+  /* כפתורי פעולה תחתונים — קבועים */
   .hero-card.users-mode .users-cta-row {
-    position: fixed; left: 0; right: 0; bottom: 0; width: 100%; padding: 10px 12px 12px;
-    display: flex !important; justify-content: center; gap: 12px; flex-wrap: wrap; z-index: 10001; 
-    background: transparent; box-shadow: none; border-top: 0;
+    position: fixed; 
+    left: 0; right: 0; bottom: 0; width: 100%; 
+    padding: 10px 12px 12px;
+    display: flex !important; 
+    justify-content: center; 
+    gap: 12px; 
+    flex-wrap: wrap; 
+    z-index: 10001; 
+    background: linear-gradient(to top, rgba(255,255,255,.95), rgba(255,255,255,.75));
+    border-top: 1px solid #e2e8f0;
   }
-  .hero-card.users-mode .users-cta-row .btn-hero--users, .hero-card.users-mode .users-cta-row .back-btn {
-    min-width: 120px; width: 40%; max-width: 220px; height: 36px; font-size: 14px; border-radius: 12px;
-  }
-
-  .hero-card.users-mode .back-btn{ color:#111 !important; opacity:1 !important; font-weight:600; }
-
-  .hero-card:not(.users-mode) .actions-row, .hero-card:not(.users-mode) .actions-row--bottom{
-    display: flex; flex-direction: row; justify-content: center; align-items: center; gap: 12px; flex-wrap: nowrap;
-  }
-  .hero-card:not(.users-mode) .actions-row .btn-hero, .hero-card:not(.users-mode) .actions-row--bottom .btn-hero{
-    min-width: 0; width: calc(50% - 10px); max-width: 250px; height: 50px; font-size: 16px; border-radius: 12px; padding: 0 6px; margin: 0;
-  }
-
-}
-
-/* רשימת האזורים – מובייל כללי */
-@media (max-width: 480px) and (orientation: portrait) {
-  .welcome-strip{ top:12px; right:12px; padding:6px 10px; border-radius:10px; }
-  .welcome-inner{ font-size:14px; font-weight:700; }
-  .hero{ padding:12px 14px; }
-  .hero-card{ width: min(76vw, 340px); padding: 14px 16px; gap: 8px; }
-  .hero-title{ font-size:20px; margin:0 0 6px; }
-  .hero-card .areas-panel{ margin-top:6px; }
-  .areas-panel .search-bar{ height:36px; font-size:14px; padding:6px 10px; margin:0 auto 8px; }
-  .areas-panel .area-item{ padding:10px 8px; }
-
-  .form-container{
-    width: min(86vw, 340px); padding: 14px 16px; margin: 72px auto 28px;
-    max-height: calc(100dvh - 72px - 28px); overflow: auto; border-radius: 14px;
-  }
-  .form-title{ font-size: 22px; margin: 0 0 8px; }
-  .form-body{ gap: 8px; }
-  .form-container input, .form-container textarea{ padding: 10px; font-size: 14px; }
-  .form-body input[type="text"], .form-body textarea{ max-width: 94%; margin: 0 auto; box-sizing: border-box; }
-  .image-preview{ width: min(100%, 240px); height: 135px; margin-top: 8px; }
-  .back-btn, .submit-btn{ height: 40px; min-width: 110px; font-size: 14px; }
-  .trash-btn{ width: 34px; height: 34px; font-size: 16px; border-radius: 8px; }
-}
-
-/* 700–799px (גובה ≥1000px) */
-@media (orientation: portrait) and (min-width: 700px) and (max-width: 799px) and (min-height: 1000px) {
-  html, body { height: 100dvh; overflow: hidden; }
-  .hero { padding:24px 28px; }
-  .hero-card { width: min(86vw, 720px); padding: 22px 24px 30px; gap: 14px; border-radius: 16px; }
-  .hero-card .areas-panel { margin-top: 8px; max-height: 60vh; }
-  .areas-panel .search-bar { width: 92%; height: 40px; font-size: 16px; padding: 8px 12px; margin: 0 auto 12px; }
-  .areas-panel .area-item { padding: 12px 10px; }
-  .areas-panel .area-item a, .areas-panel .area-item span { font-size: 18px; line-height: 1.45; }
-  .trash-icon-btn { width: 40px; height: 40px; font-size: 20px; }
-  .btn-hero.btn-primary { min-width: 200px; height: 48px; font-size: 17px; border-radius: 12px; padding: 0 16px; }
-
-  .form-container{ width: min(64vw, 520px); padding: 18px 20px; margin: 84px auto 40px; max-height: calc(100dvh - 84px - 40px); overflow: auto; border-radius: 14px; }
-  .form-body input[type="text"], .form-body textarea{ width: 92%; margin: 0 auto; box-sizing: border-box; }
-  .image-preview{ width: min(100%, 300px); height: 170px; }
-  .back-btn, .submit-btn{ height: 44px; min-width: 130px; font-size: 16px; }
-
-  .hero-card.users-mode .admin-users-panel--lg{ width: min(94%, 760px); margin: 16px auto 0; padding: 0 14px; border-radius: 16px; }
-  .hero-card.users-mode .users-table-wrap{ 
-    --rowH: 68px; --headH: 60px; height: calc(var(--headH) + var(--rowH) * 6 + 2px) !important; max-height: calc(var(--headH) + var(--rowH) * 6 + 2px) !important; 
-     flex: 0 0 auto !important; overflow-y: auto; overflow-x: hidden; margin-inline: auto;
-  }
-  .hero-card.users-mode .users-table--lg{ font-size: 15px; }
-  .hero-card.users-mode .users-table--lg th{ font-size: 16px; }
-
-  .hero-card.users-mode .users-cta-row{ 
-    position: absolute; left: 0; right: 0; bottom: 22px; max-width: 760px; margin: 0 auto; gap: 12px; display: flex; flex-wrap: wrap; justify-content: center; 
-  }
-  .hero-card.users-mode .users-cta-row .btn-hero--users, .hero-card.users-mode .users-cta-row .back-btn{
-    height: 38px; font-size: 14px; min-width: 140px; width: calc(32% - 8px); max-width: none;
+  .hero-card.users-mode .users-cta-row .btn-hero--users, 
+  .hero-card.users-mode .users-cta-row .back-btn {
+    min-width: 120px; 
+    width: 42%; 
+    max-width: 220px; 
+    height: 36px; 
+    font-size: 14px; 
+    border-radius: 12px;
   }
 
-  .hero-card.users-mode{ position: relative; padding-bottom: 220px; }
-  .hero-card.users-mode .back-btn{ color:#111 !important; font-weight:600; }
-}
-
-/* 481–600px */
-@media (min-width: 481px) and (max-width: 600px) and (orientation: portrait) {
-  .welcome-strip{ top:14px; right:14px; padding:8px 12px; }
-  .welcome-inner{ font-size:16px; }
-  .hero{ padding:14px 16px; }
-  .hero-card{ width: min(74vw, 360px); padding: 16px 18px; gap: 8px; }
-  .hero-title{ font-size:24px; margin:0 0 8px; }
-  .hero-card .areas-panel{ margin-top:8px; }
-  .areas-panel .search-bar{ height:38px; font-size:15px; padding:6px 12px; margin:0 auto 10px; }
-  .areas-panel .area-item{ padding:11px 8px; }
-
-  .form-container{ width: min(82vw, 380px); padding: 16px 18px; margin: 68px auto 32px; max-height: calc(100dvh - 68px - 32px); overflow: auto; border-radius: 14px; }
-  .form-title{ font-size: 24px; margin: 0 0 10px; }
-  .form-body{ gap: 10px; }
-  .form-container input, .form-container textarea{ padding: 12px; font-size: 15px; width: 95%; margin: 0 auto; box-sizing: border-box; }
-  .image-preview{ width: min(100%, 280px); height: 160px; }
-  .back-btn, .submit-btn{ height: 42px; min-width: 120px; font-size: 15px; }
-  .trash-btn{ width: 36px; height: 36px; font-size: 17px; border-radius: 9px; }
-}
-
-/* 800–1024px – פורטרט */
-@media (orientation: portrait) and (min-width: 800px) and (min-height: 1024px) {
-  html, body { height: 100dvh; overflow: hidden; }
-  .welcome-strip { top: 22px; right: 22px; padding: 16px 20px; border-radius: 12px; }
-  .welcome-inner { font-size: 28px; font-weight: 800; }
-  .hero { padding: 28px 32px; }
-  .hero-card { width: min(80vw, 900px); padding: 26px 28px 30px; gap: 18px; border-radius: 18px; }
-  .hero-title { font-size: 34px; margin-bottom: 14px; }
-  .hero-card .areas-panel { margin-top: 10px; max-height: 64vh; }
-  .areas-panel .search-bar { width: 92%; height: 44px; font-size: 16px; padding: 8px 12px; margin: 0 auto 12px; }
-  .btn-hero.btn-primary { min-width: 220px; height: 52px; font-size: 20px; padding: 0 18px; border-radius: 8px; }
-  .trash-icon-btn { width: 40px; height: 40px; font-size: 20px; border-radius: 12px; }
-  .areas-panel .area-item { padding: 12px 12px; }
-  .areas-panel .area-item a, .areas-panel .area-item span { font-size: 20px; line-height: 1.45; }
-  .form-container input, .form-container textarea{ width: 92%; margin: 0 auto; box-sizing: border-box; }
-  .form-body input[type="text"], .form-body textarea{ width: 92%; max-width: none; }
-
-  .hero-card.users-mode .admin-users-panel--lg{ width: min(92%, 980px); margin: 18px auto 0; padding: 0 18px; border-radius: 18px; }
-  .hero-card.users-mode .users-table-wrap{
-    --rowH: 68px; --headH: 62px; height: calc(var(--headH) + var(--rowH) * 6 + 2px) !important;  max-height: calc(var(--headH) + var(--rowH) * 6 + 2px) !important;
-    flex: 0 0 auto !important; overflow-y: auto; overflow-x: hidden; margin-inline: auto;
+  /* כפתורי הירו בכרטיס רגיל */
+  .hero-card:not(.users-mode) .actions-row, 
+  .hero-card:not(.users-mode) .actions-row--bottom{
+    display: flex; 
+    flex-direction: row; 
+    justify-content: center; 
+    align-items: center; 
+    gap: 12px; 
+    flex-wrap: nowrap;
   }
-  .hero-card.users-mode .users-table--lg{ font-size: 16px; }
-  .hero-card.users-mode .users-table--lg th{ font-size: 18px; }
-
-  .hero-card.users-mode .users-cta-row{ 
-    position: absolute; left: 0; right: 0; bottom: 32px; max-width: 980px; margin: 0 auto; gap: 14px; display: flex; flex-wrap: wrap; justify-content: center; 
-  }
-  .hero-card.users-mode .users-cta-row .btn-hero--users, .hero-card.users-mode .users-cta-row .back-btn{
-    height: 45px; font-size: 18px; min-width: 150px; width: calc(31% - 10px); max-width: none;
-  }
-
-  .hero-card.users-mode{ position: relative; padding-bottom: 210px; }
-  .hero-card.users-mode .back-btn{ color:#111 !important; font-weight:600; }
-}
-
-/* ≥1024px (נמוכים landscape) */
-@media (orientation: landscape) and (min-width: 1024px) and (min-height: 800px) {
-  .hero { padding: 28px 32px; }
-  .hero-card { width: min(58vw, 700px); padding: 26px 28px; gap: 18px; border-radius: 16px; }
-  .hero-title { font-size: 42px; margin-bottom: 12px; }
-  .hero-card .areas-panel { margin-top: 10px; max-height: 66vh; padding-top: 6px; }
-  .areas-panel .search-bar { width: 90%; height: 44px; font-size: 16px; padding: 8px 12px; margin: 0 auto 12px; }
-  .areas-panel .area-item { padding: 12px 12px; }
-  .areas-panel .area-item a, .areas-panel .area-item span { font-size: 18px; line-height: 1.45; }
-  .trash-icon-btn { width: 40px; height: 40px; font-size: 20px; }
-  .btn-hero.btn-primary { min-width: 220px; height: 52px; font-size: 18px; border-radius: 12px; padding: 0 18px; }
-  .welcome-strip { top: 20px; right: 20px; padding: 10px 14px; }
-  .welcome-inner { font-size: 18px; font-weight: 800; }
-
-  .App:has(.hero-card.users-mode) .hero { padding: 32px 36px; }
-  .hero-card.users-mode{
-    width: min(82vw, 1100px); padding: 28px 28px 170px;  gap: 18px; border-radius: 18px; margin: 0 auto; position: relative; 
-  }
-
-  .hero-card.users-mode .admin-users-panel--lg{
-    width: min(94%, 1160px); margin: 10px auto 0; padding: 0 18px; border-radius: 16px; overflow: hidden; 
-  }
-
-  .hero-card.users-mode .users-table-wrap{
-    --rowH: 68px; --headH: 64px; height: calc(var(--headH) + var(--rowH) * 5); max-height: calc(var(--headH) + var(--rowH) * 5);
-    overflow-y: auto; overflow-x: hidden; margin-inline: auto; scrollbar-gutter: stable both-edges;
-  }
-
-  .hero-card.users-mode .users-cta-row{
-    position: absolute; left: 0; right: 0; bottom: 26px; max-width: min(94%, 1160px);
-    margin: 0 auto; padding: 0 18px; display: flex; justify-content: center; gap: 14px; flex-wrap: wrap;
-  }
-  .hero-card.users-mode .users-cta-row .btn-hero--users, .hero-card.users-mode .users-cta-row .back-btn{
-    height: 50px; font-size: 16px; min-width: 180px; width: calc(33% - 10px); max-width: none; border-radius: 12px;
-  }
-  .hero-card.users-mode .back-btn{ color:#111 !important; font-weight:700; }
-}
-
-@media (orientation: landscape) and (min-width: 1366px) and (min-height: 900px) {
-  .hero-card.users-mode{ padding-bottom: clamp(100px, 12vh, 160px); }
-  .hero-card.users-mode .users-table-wrap{
-    --rowH: 68px; --headH: 64px; height: calc(var(--headH) + var(--rowH) * 7 + 2px);
-    max-height: calc(var(--headH) + var(--rowH) * 7 + 2px); overflow-y: auto; overflow-x: hidden;
-  }
-  .hero-card.users-mode .users-cta-row{ bottom: calc(clamp(12px, 2vh, 22px) + env(safe-area-inset-bottom, 0px)); }
-  .hero-card.users-mode .admin-users-panel--lg{ margin: 6px auto 0; }
-  .hero-card.users-mode .users-cta-row .btn-hero--users, .hero-card.users-mode .users-cta-row .back-btn{
-    height: 48px; font-size: 18px; min-width: 140px; width: auto; flex: 0 0 auto; border-radius: 12px;
-  }
-}
-
-@media (orientation: landscape) and (min-width: 1000px) and (max-width: 1100px) and (min-height: 700px) and (max-height: 800px) {
-  .App:has(.hero-card.users-mode) .hero { padding: 24px 28px; }
-
-  .hero-card.users-mode{ width: min(90vw, 980px); padding: 18px 18px 130px;  border-radius: 16px; margin: 0 auto; position: relative; }
-  .hero-card.users-mode .admin-users-panel--lg{ width: min(95%, 1000px); margin: 10px auto 0; padding: 0 14px; border-radius: 14px; overflow: hidden; }
-  .hero-card.users-mode .users-table-wrap{
-    --rowH: 64px; --headH: 58px; height: calc(var(--headH) + var(--rowH) * 5 + 2px); max-height: calc(var(--headH) + var(--rowH) * 5 + 2px);
-    overflow-y: auto; overflow-x: hidden; margin-inline: auto;
-  }
-  .hero-card.users-mode .users-cta-row{
-    position: absolute; left: 0; right: 0; bottom: 16px; max-width: min(95%, 1000px);
-    margin: 0 auto; padding: 0 14px; display: flex; justify-content: center; gap: 10px; flex-wrap: nowrap;            
-  }
-  .hero-card.users-mode .users-cta-row .btn-hero--users, .hero-card.users-mode .users-cta-row .back-btn{
-    height: 36px; font-size: 14px; min-width: 140px; width: auto; max-width: none;  border-radius: 12px;
-  }
-  .hero-card.users-mode .back-btn{ color:#111 !important; font-weight:700; }
-}
-
-@media (orientation: landscape) and (min-width: 1101px) and (max-width: 1400px) and (min-height: 800px) and (max-height: 880px) {
-  .hero-card.users-mode{ padding-bottom: 110px; padding-inline: 16px; }
-  .hero-card.users-mode .users-cta-row{ bottom: 18px; }
-  .hero-card.users-mode .users-cta-row .btn-hero--users, .hero-card.users-mode .users-cta-row .back-btn{
-    height: 60px; font-size: 19px; min-width: 190px; 
-  }
-  .hero-card.users-mode .users-table-wrap{
-    --rowH: 68px; --headH: 64px; height: calc(var(--headH) + var(--rowH) * 6 + 2px); max-height: calc(var(--headH) + var(--rowH) * 6 + 2px);
-    overflow-y: auto; overflow-x: hidden; scrollbar-gutter: stable both-edges;
-  }
-  .hero-card.users-mode .admin-users-panel--lg{ padding: 0 14px; }
-}
-
-@media (orientation: landscape) and (min-width: 1401px) and (max-width: 2000px) and (min-height: 900px) and (max-height: 1300px) {
-  .hero-card.users-mode{ padding-bottom: 150px; }
-  .hero-card.users-mode .users-cta-row{ bottom: 16px; }
-}
-
-/* Landscape: 1000–1100px (גובה 560–640px) */
-@media (orientation: landscape) and (min-width: 1000px) and (max-width: 1100px) and (min-height: 560px) and (max-height: 640px) {
-  .hero { padding: 18px 20px; }
-  .hero-card{ width: min(60vw, 560px); padding: 18px 20px; gap: 12px; border-radius: 14px; }
-
-  .form-container{
-    width: min(56vw, 520px); margin: 56px auto 24px; padding: 14px 16px; gap: 8px; border-radius: 12px;
-    max-height: calc(100dvh - 80px); overflow: auto;
-  }
-  .form-title{ font-size: 22px; margin: 0 0 8px; }
-  .form-body{ gap: 8px; }
-  .form-body input[type="text"], .form-body textarea{
-    width: 92%; margin: 0 auto; height: auto; font-size: 14px; padding: 8px 10px; box-sizing: border-box;
-  }
-  .form-body textarea{ height: 96px; }
-  .file-row{ width: 92%; margin: 0 auto; height: 32px; padding: 0 10px; gap: 8px; border-radius: 10px; }
-  .file-row input[type="file"]{ height: 30px; line-height: 30px; font-size: 12px; padding: 0; }
-  .file-row input[type="file"]::file-selector-button,
-  .file-row input[type="file"]::-webkit-file-upload-button{ height: 30px; font-size: 12px; padding: 0 10px; border-radius: 8px; }
-  .image-preview{ width: 220px; height: 124px; }
-  .back-btn, .submit-btn{ height: 36px; min-width: 110px; font-size: 14px; }
-  .trash-btn{ width: 30px; height: 30px; font-size: 15px; }
-
-  .App:has(.hero-card.users-mode) .hero { padding: 22px 26px; }
-
-  .hero-card.users-mode{ width: min(80vw, 900px); padding: 22px 22px 84px; border-radius: 16px; margin: 0 auto; position: relative; }
-  .hero-card.users-mode .admin-users-panel--lg{ width: min(94%, 940px); margin: 6px auto 0; padding: 0 16px; border-radius: 14px; overflow: hidden; }
-  .hero-card.users-mode .users-table-wrap{
-    --rowH: 64px; --headH: 58px; height: calc(var(--headH) + var(--rowH) * 5 + 2px); max-height: calc(var(--headH) + var(--rowH) * 5 + 2px); 
-    overflow-y: auto; overflow-x: hidden; scrollbar-gutter: stable both-edges;
-  }
-
-  .hero-card.users-mode .users-cta-row{
-    position: absolute; left: 0; right: 0; bottom: calc(16px + env(safe-area-inset-bottom, 0px)); max-width: min(94%, 940px);
-    margin: 0 auto; padding: 0 16px; display: flex; justify-content: center; gap: 12px; flex-wrap: wrap;
-  }
-  .hero-card.users-mode .users-cta-row .btn-hero--users, .hero-card.users-mode .users-cta-row .back-btn{
-    height: 40px; font-size: 15px; min-width: 160px; width: calc(33% - 8px);
-  }
-  .hero-card.users-mode .back-btn{ color:#111 !important; font-weight:700; }
-}
-
-/* Landscape: גובה 520–560px */
-@media (orientation: landscape) and (max-height: 560px) and (min-height: 520px) {
-  .welcome-strip{ top: 12px; right: 12px; padding: 6px 10px; border-radius: 10px; }
-  .welcome-inner{ font-size: 13px; font-weight: 700; }
-  .hero { padding: 12px 14px; }
-  .hero-card.users-mode{ width: 98vw; height: 92vh; margin: 0 auto; padding: 12px 14px; gap: 10px; border-radius: 12px; display:flex; flex-direction:column; }
-  .hero-title { font-size: 20px; margin: 0 0 6px; }
-  .hero-card .areas-panel { margin-top: 6px; max-height: 52vh; }
-  .areas-panel .search-bar { width: 90%; height: 30px; font-size: 13px; padding: 5px 9px; margin: 0 auto 8px; }
-  .areas-panel .area-item { padding: 10px 8px; }
-  .areas-panel .area-item a, .areas-panel .area-item span { font-size: 15px; }
-  .users-cta-row{ width: 100%; max-width: none; justify-content: center; gap: 10px; flex-wrap: nowrap; }
-  .users-cta-row .btn-hero--users, .users-cta-row .back-btn{ min-width: 120px; height: 36px; font-size: 14px; }
-
-  .admin-users-panel--lg{ width: 100%; max-width: none; padding: 8px 10px; flex:1 1 auto; display:flex; flex-direction:column; }
-  .users-table-wrap{ 
-    --rowH: 60px; --headH: 56px; flex: 0 0 auto !important; height: calc(var(--headH) + var(--rowH) * 4 + 1px) !important; 
-    max-height: calc(var(--headH) + var(--rowH) * 4 + 1px) !important;  overflow-x: hidden; overflow-y: auto; 
-  }
-  .users-table--lg{ table-layout: fixed; font-size: 16px; }
-  .users-table--lg th, .users-table--lg td{ white-space: nowrap; text-overflow: ellipsis; overflow: hidden; }
-  .users-table--lg .col-id{ width: 64px; text-align:center; }
-  .users-table--lg .col-username{ width: 22%; }
-  .users-table--lg .col-email{ width: 34%; }
-  .users-table--lg .col-phone{ width: 20%; }
-  .users-table--lg .col-role{ width: 12%; text-align:center; }
-  .users-table--lg .col-trash{ width: 60px; text-align:center; }
-
-  .users-cta-row{ width: 100%; justify-content: center; gap: 10px; flex-wrap: nowrap; }
-  .users-cta-row .btn-hero--users, .users-cta-row .back-btn{ min-width: 120px; height: 36px; font-size: 14px; }
-
-  .form-container{
-    width: min(50vw, 360px); margin: 12px auto; padding: 10px 12px; gap: 6px; border-radius: 12px;
-    max-height: calc(100dvh - 24px); overflow: auto;
-  }
-  .form-title{ font-size: 18px; margin: 0 0 6px; }
-  .form-body{ gap: 6px; }
-  .form-body input[type="text"]{ width: 86%; height: 28px; font-size: 12px; padding: 5px 7px; margin: 0 auto; box-sizing: border-box; }
-  .form-body textarea{ width: 86%; height: 80px; font-size: 12px; padding: 5px 7px; margin: 0 auto; box-sizing: border-box; }
-  .form-container .file-row, .form-container input[type="file"]{ width: 86%; margin: 0 auto; box-sizing: border-box; }
-  .form-container .file-row{ height: 30px; padding: 0 10px; display: flex; align-items: center; gap: 8px; border-radius: 10px; border: 1px solid #e2e8f0; background: #fff; box-shadow: inset 0 1px 2px rgba(0,0,0,.03); }
-  .form-container input[type="file"]{ height: 28px; font-size: 12px; padding: 0; line-height: 28px; border: 0; outline: none; box-shadow: none; background: transparent; flex: 1; }
-  .form-container input[type="file"]::file-selector-button,
-  .form-container input[type="file"]::-webkit-file-upload-button{ height: 28px; font-size: 12px; padding: 0 10px; border-radius: 8px; border: 1px solid #e2e8f0; background: #f8fafc; cursor: pointer; }
-  .image-preview{ width: 180px; height: 100px; }
-  .back-btn, .submit-btn{ height: 28px; min-width: 92px; font-size: 12px; border-radius: 9px; }
-  .trash-btn{ width: 26px; height: 26px; font-size: 14px; border-radius: 8px; }
-
-  .hero-card.users-mode .admin-users-panel--lg{ width: 92%; margin: 16px auto 0; padding: 0 10px; border-radius: 14px; overflow: hidden; }
-  .hero-card.users-mode .users-table-wrap{ margin-inline: auto; }
-
-  .hero-card.users-mode .users-cta-row .btn-hero--users, .hero-card.users-mode .users-cta-row .back-btn{
-    height: 32px; font-size: 13px; min-width: 110px; width: auto; max-width: 200px;
-  }
-
-  .hero-card.users-mode .back-btn{ color:#111 !important; font-weight:600; }
-
-  .hero-card.users-mode .users-table--lg .col-role{ width: 13%; text-align:center; }
-  .hero-card.users-mode .users-table--lg .col-username{ width: 22%; }  
-}
-
-/* Landscape: גובה ≤430px */
-@media (orientation: landscape) and (max-height: 430px) {
-  .welcome-strip{ top: 10px; right: 10px; padding: 5px 10px; border-radius: 10px; }
-  .welcome-inner{ font-size: 12px; font-weight: 700; }
-  .hero { padding: 10px 12px; }
-  .hero-card.users-mode{ width: 98vw; height: 92vh; margin: 0 auto; padding: 10px 12px; gap: 8px; border-radius: 12px; display:flex; flex-direction:column; }
-  .hero-title { font-size: 19px; margin: 0 0 6px; }
-  .hero-card .areas-panel { margin-top: 4px; max-height: 42vh; }
-  .areas-panel .search-bar { width: 90%; height: 26px; font-size: 12px; padding: 4px 8px; margin: 0 auto 6px; }
-  .areas-panel .area-item { padding: 8px 6px; }
-  .areas-panel .area-item a, .areas-panel .area-item span { font-size: 14px; }
-  .users-cta-row{ width:100%; justify-content:center; gap:8px; }
-  .users-cta-row .btn-hero--users, .users-cta-row .back-btn{ min-width: 110px; height: 34px; font-size: 13px; }
-
-  .admin-users-panel--lg{ width: 100%; max-width: none; padding: 6px 8px; flex:1 1 auto; display:flex; flex-direction:column; }
-  .users-table-wrap{ flex:1 1 auto; overflow:auto; }
-  .users-table--lg{ table-layout: fixed; font-size: 14px; }
-  .users-table--lg th, .users-table--lg td{ white-space: nowrap; text-overflow: ellipsis; overflow: hidden; }
-
-  html, body { height: 100dvh; overflow: hidden; }
-
-  .form-container{
-    width: min(54vw, 460px); margin: 6px auto; height: auto; max-height: calc(100dvh - 12px);
-    padding: 8px 10px 6px; border-radius: 10px; gap: 5px; overflow: hidden;
-  }
-  .form-title{ font-size: 18px; margin: 0 0 4px; }
-  .form-body{ gap: 6px; }
-  .form-body input[type="text"]{ width: 86%; height: 26px; font-size: 12px; padding: 5px 7px; margin: 0 auto; box-sizing: border-box; }
-  .form-body textarea{ width: 86%; height: 80px; font-size: 12px; padding: 5px 7px; margin: 0 auto; box-sizing: border-box; }
-  .form-container .file-row, .form-container input[type="file"]{ width: 86%; margin: 0 auto; box-sizing: border-box; }
-  .form-container .file-row{ height: 30px; padding: 0 10px; display: flex; align-items: center; gap: 8px; border-radius: 10px; border: 1px solid #e2e8f0; box-shadow: inset 0 1px 2px rgba(0,0,0,.03); }
-  .form-container input[type="file"]{ height: 28px; font-size: 12px; padding: 0; line-height: 28px; border: 0; outline: none; box-shadow: none; background: transparent; flex: 1; }
-  .form-container input[type="file"]::file-selector-button,
-  .form-container input[type="file"]::-webkit-file-upload-button{ height: 28px; font-size: 12px; padding: 0 10px; border-radius: 8px; border: 1px solid #e2e8f0; background: #f8fafc; cursor: pointer; }
-  .image-preview{ width: 150px; height: 85px; }
-  .back-btn, .submit-btn{ height: 26px; min-width: 84px; font-size: 11px; border-radius: 8px; }
-  .trash-btn{ width: 24px; height: 24px; font-size: 13px; border-radius: 8px; }
-
-  .hero-card.users-mode{ width: 98vw; height: 92vh; margin: 0 auto; padding: 8px 10px; gap: 8px; border-radius: 12px; display:flex; flex-direction:column; }
-  .hero-card.users-mode .admin-users-panel--lg{ width: 95%; margin: 4px auto 0; padding: 0 6px; border-radius: 12px; }
-  .hero-card.users-mode .users-table-wrap{ 
-    --rowH: 50px; --headH: 48px; height: calc(var(--headH) + var(--rowH) * 3 + 1px); max-height: calc(var(--headH) + var(--rowH) * 3 + 1px); 
-    overflow-y: auto;  overflow-x: hidden; margin-inline: auto;
-  }
-
-  .hero-card.users-mode .users-cta-row{ 
-    position: absolute; left: 0; right: 0; bottom: 10px; max-width: 95%; margin: 0 auto; padding: 0 8px;
-    display: flex; justify-content: center; gap: 8px; flex-wrap: nowrap;      
-  }
-  .hero-card.users-mode .users-cta-row .btn-hero--users, .hero-card.users-mode .users-cta-row .back-btn{
-    position: static; height: 24px; font-size: 12px; min-width: 110px; width: auto; padding: 0 10px; flex: 0 0 auto;         
-  }
-  .hero-card.users-mode .back-btn{ color:#111 !important; font-weight:600; }
-
-  .hero-card.users-mode .users-table--lg .col-role{ width: 12%; }
-  .hero-card.users-mode .users-table--lg .col-username{ width: 20%; }
-  .hero-card.users-mode .users-table--lg th, .hero-card.users-mode .users-table--lg td{ padding: 6px 8px; }
-  .hero-card.users-mode .users-subtitle{ margin: 0 0 4px; line-height: 1.1; }
-}
-
-@media (orientation: landscape) and (min-width: 1000px) and (max-width: 1350px) and (min-height: 560px) and (max-height: 880px) {
-  .form-container{ padding-bottom: 40px; max-height: calc(100dvh - 76px); }
-  .back-btn, .submit-btn{ height: 32px; min-width: 120px; font-size: 14px; border-radius: 10px; }
-
-  .hero-card.users-mode .users-cta-row{
-    flex-wrap: nowrap; justify-content: center; gap: 10px;
-  }
-  .hero-card.users-mode .users-cta-row .btn-hero--users, .hero-card.users-mode .users-cta-row .back-btn{
-    height: 34px; font-size: 14px; min-width: 130px; width: auto; max-width: none; 
+  .hero-card:not(.users-mode) .actions-row .btn-hero, 
+  .hero-card:not(.users-mode) .actions-row--bottom .btn-hero{
+    min-width: 0; 
+    width: calc(50% - 10px); 
+    max-width: 250px; 
+    height: 48px; 
+    font-size: 16px; 
+    border-radius: 12px; 
+    padding: 0 6px; 
+    margin: 0;
   }
 }
