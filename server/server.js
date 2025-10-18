@@ -171,6 +171,17 @@ app.put("/api/users/:id", requireAuth, requireRole(1), async (req, res) => {
   }
 });
 
+// מחיקת משתמש (Admin בלבד)
+app.delete("/api/users/:id", requireAuth, requireRole(1), async (req, res) => {
+  try {
+    const id = Number(req.params.id);
+    if (!Number.isFinite(id)) return res.status(400).json({ error: "Invalid id" });
+    await db.query("DELETE FROM users WHERE id = ?", [id]);
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
 
 // ================= אזורים =================
 app.post("/api/areas/upload", requireAuth, requireRole(1), upload.single("path"), async (req, res) => {

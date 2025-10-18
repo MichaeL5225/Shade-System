@@ -1,4 +1,3 @@
-// AreaList.js
 import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import { Link } from 'react-router-dom';
@@ -23,31 +22,27 @@ function AreaList() {
   const isAdmin = role === 1;
 
   // ===== USERS PANEL (מצבים) =====
-  const [showUsersPanel, setShowUsersPanel] = useState(false);   // USERS PANEL
-  const [users, setUsers] = useState([]);                        // USERS PANEL (מצב תצוגה)
-  const [editableUsers, setEditableUsers] = useState([]);        // USERS PANEL (מצב עריכה)
-  const [usersEditMode, setUsersEditMode] = useState(false);     // USERS PANEL
-  const [loadingUsers, setLoadingUsers] = useState(false);       // USERS PANEL
-  const [savingUsers, setSavingUsers] = useState(false);         // USERS PANEL
+  const [showUsersPanel, setShowUsersPanel] = useState(false);
+  const [users, setUsers] = useState([]);
+  const [editableUsers, setEditableUsers] = useState([]);
+  const [usersEditMode, setUsersEditMode] = useState(false);
+  const [loadingUsers, setLoadingUsers] = useState(false);
+  const [savingUsers, setSavingUsers] = useState(false);
 
-  // טעינת שם משתמש
   useEffect(() => {
     setUsername(localStorage.getItem('shade_username') || '');
   }, []);
 
-  // הבאת רשימת אזורים
   useEffect(() => {
     axios.get('/api/areas')
       .then(res => setAreas(res.data))
       .catch(err => console.error('שגיאה בקבלת אזורים:', err));
   }, []);
 
-  // ניקוי תצוגת תמונה
   useEffect(() => {
     return () => { if (preview) URL.revokeObjectURL(preview); };
   }, [preview]);
 
-  // טופס אזור
   const toggleForm = () => {
     if (!isAdmin) { alert('אין הרשאה להוסיף אזור'); return; }
     setShowForm(!showForm);
@@ -122,14 +117,12 @@ function AreaList() {
     if (file) setPreview(URL.createObjectURL(file));
   };
 
-  // ===== USERS PANEL (פונקציות) =====
-  const loadUsers = async () => {                                  // USERS PANEL
+  const loadUsers = async () => {
     if (!isAdmin) return;
     try {
       setLoadingUsers(true);
-      const { data } = await axios.get('/api/users'); // דורש Authorization
+      const { data } = await axios.get('/api/users');
       setUsers(Array.isArray(data) ? data : []);
-      // אם היינו במצב עריכה קודם, נעדכן גם ה־editableUsers
       if (usersEditMode) setEditableUsers(Array.isArray(data) ? data.map(u => ({ ...u })) : []);
     } catch (e) {
       alert(e?.response?.data?.error || e.message);
@@ -138,39 +131,36 @@ function AreaList() {
     }
   };
 
-  const toggleUsersPanel = async () => {                           // USERS PANEL
+  const toggleUsersPanel = async () => {
     if (!isAdmin) return;
     const next = !showUsersPanel;
     setShowUsersPanel(next);
     if (next) {
-      setUsersEditMode(false);  // ברירת מחדל – מצב תצוגה
+      setUsersEditMode(false);
       await loadUsers();
     }
   };
 
-  const enterUsersEdit = () => {                                   // USERS PANEL
+  const enterUsersEdit = () => {
     if (!isAdmin) return;
-    setEditableUsers(users.map(u => ({ ...u }))); // עותק לעריכה
+    setEditableUsers(users.map(u => ({ ...u })));
     setUsersEditMode(true);
   };
 
-  const cancelUsersEdit = () => {                                  // USERS PANEL
+  const cancelUsersEdit = () => {
     setUsersEditMode(false);
-    setEditableUsers([]); // זריקת שינויים מקומיים
+    setEditableUsers([]);
   };
 
-  // עדכון שדה בתוך editableUsers
-  const updateEditableUserField = (id, field, value) => {          // USERS PANEL
+  const updateEditableUserField = (id, field, value) => {
     setEditableUsers(prev => prev.map(u => (u.id === id ? { ...u, [field]: value } : u)));
   };
 
-  // שמירה כללית — שולחת רק מה שהשתנה
-  const saveAllUsers = async () => {                                // USERS PANEL
+  const saveAllUsers = async () => {
     if (!isAdmin || !usersEditMode) return;
     try {
       setSavingUsers(true);
 
-      // נשווה בין users (מצב תצוגה – לפני עריכה) לבין editableUsers (לאחר עריכה)
       const updates = [];
       for (let i = 0; i < editableUsers.length; i++) {
         const cur = editableUsers[i];
@@ -178,13 +168,8 @@ function AreaList() {
         if (!orig) continue;
 
         const payload = {};
-        if (cur.email !== orig.email) payload.email = String(cur.email || '').trim().toLowerCase();
-        if (cur.phone !== orig.phone) payload.phone = String(cur.phone || '').trim();
         if (Number(cur.role) !== Number(orig.role)) payload.role = Number(cur.role);
-
-        if (Object.keys(payload).length) {
-          updates.push({ id: cur.id, payload });
-        }
+        if (Object.keys(payload).length) updates.push({ id: cur.id, payload });
       }
 
       if (updates.length === 0) {
@@ -192,7 +177,6 @@ function AreaList() {
         return;
       }
 
-      // שולחים עדכונים (אפשר מקביל; כאן נעבור בטור לקריאות ברורות)
       for (const u of updates) {
         await axios.put(`/api/users/${u.id}`, u.payload);
       }
@@ -200,11 +184,23 @@ function AreaList() {
       alert('נשמר בהצלחה');
       setUsersEditMode(false);
       setEditableUsers([]);
-      await loadUsers(); // רענון רשימה אחרי שמירה
+      await loadUsers();
     } catch (e) {
       alert(e?.response?.data?.error || e.message);
     } finally {
       setSavingUsers(false);
+    }
+  };
+
+  const deleteUser = async (id) => {
+    if (!isAdmin) return;
+    const ok = window.confirm('למחוק משתמש זה?');
+    if (!ok) return;
+    try {
+      await axios.delete(`/api/users/${id}`);
+      await loadUsers();
+    } catch (e) {
+      alert(e?.response?.data?.error || e.message);
     }
   };
 
@@ -218,168 +214,194 @@ function AreaList() {
         minHeight: "100vh"
       }}
     >
-      {/* פס עליון */}
-      <div className="welcome-strip">
-        <div className="welcome-inner">
-          ברוך הבא{username ? `, ${username}` : ''}
+      {!(isAdmin && showUsersPanel) && (
+        <div className="welcome-strip">
+          <div className="welcome-inner">
+            ברוך הבא{username ? `, ${username}` : ''}
+          </div>
         </div>
-      </div>
+    )}
 
-      {/* אזור ניהול וחיפוש אזורים */}
       {!showForm && (
         <section className="hero">
-          <div className="hero-card">
+          <div className={`hero-card${showUsersPanel ? ' users-mode' : ''}`}>
             <h1 className="hero-title">ניהול אזורי קמפוס</h1>
 
-            <div className="hero-actions">
-              <div className="areas-panel">
-                {/* חיפוש */}
-                <input
-                  type="text"
-                  placeholder="חיפוש..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="search-bar"
-                />
+            {isAdmin && showUsersPanel && (
+              <h2 className="users-subtitle">טבלת משתמשים</h2>
+            )}
 
-                {/* רשימת אזורים */}
-                {filteredAreas.length === 0 ? (
-                  <div className="empty-state">
-                    {searchTerm ? "לא נמצאו אזורים" : "לא נוספו אזורים"}
-                  </div>
-                ) : (
-                  filteredAreas.map((area, index) => (
-                    <div key={index} className="area-item">
-                      <Link to={`/edit/${encodeURIComponent(area.name)}`}>
-                        <strong>{area.name}</strong>
-                      </Link>
-
-                      {/* מחיקה – רק אדמין */}
-                      {isAdmin && (
-                        <button
-                          type="button"
-                          className="trash-icon-btn"
-                          title={`מחיקת האזור "${area.name}"`}
-                          aria-label={`מחיקת האזור ${area.name}`}
-                          onClick={() => handleDeleteSingle(area.name)}
-                        >
-                          🗑
-                        </button>
-                      )}
-                    </div>
-                  ))
-                )}
-
-                {/* מחיקת נבחרים */}
-                {isAdmin && deleteMode && selectedAreas.length > 0 && (
-                  <div className="panel-actions">
-                    <button className="btn delete small" onClick={handleDeleteSelected}>
-                      🗑 מחיקת נבחרים ({selectedAreas.length})
-                    </button>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* כפתורי ניהול */}
-            <div className="actions-row" style={{ gap: 12, flexWrap: 'wrap' }}>
-              {isAdmin && (
+            <div className="hero-actions" style={{ width: '100%' }}>
+              {!isAdmin || !showUsersPanel ? (
                 <>
-                  <button className="btn-hero btn-primary" onClick={toggleForm}>
-                    הוספת אזור
-                  </button>
-                  <button className="btn-hero btn-primary" onClick={toggleUsersPanel}>
-                    {showUsersPanel ? 'הסתר משתמשים' : 'משתמשים'}
-                  </button>
+                  <div className="areas-panel">
+                    <input
+                      type="text"
+                      placeholder="חיפוש..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className="search-bar"
+                    />
+
+                    {filteredAreas.length === 0 ? (
+                      <div className="empty-state">
+                        {searchTerm ? "לא נמצאו אזורים" : "לא נוספו אזורים"}
+                      </div>
+                    ) : (
+                      filteredAreas.map((area, index) => (
+                        <div key={index} className="area-item">
+                          <Link to={`/edit/${encodeURIComponent(area.name)}`}>
+                            <strong>{area.name}</strong>
+                          </Link>
+
+                          {isAdmin && (
+                            <button
+                              type="button"
+                              className="trash-icon-btn"
+                              title={`מחיקת האזור "${area.name}"`}
+                              aria-label={`מחיקת האזור ${area.name}`}
+                              onClick={() => handleDeleteSingle(area.name)}
+                            >
+                              🗑
+                            </button>
+                          )}
+                        </div>
+                      ))
+                    )}
+
+                    {isAdmin && deleteMode && selectedAreas.length > 0 && (
+                      <div className="panel-actions">
+                        <button className="btn delete small" onClick={handleDeleteSelected}>
+                          🗑 מחיקת נבחרים ({selectedAreas.length})
+                        </button>
+                      </div>
+                    )}
+                  </div>
+
+                  {isAdmin && !showUsersPanel && (
+                    <div className="actions-row actions-row--bottom" style={{ gap: 12, flexWrap: 'wrap' }}>
+                      <button className="btn-hero btn-primary" onClick={toggleUsersPanel}>משתמשים</button>
+                      <button className="btn-hero btn-primary" onClick={toggleForm}>הוספת אזור</button>
+                    </div>
+                  )}
                 </>
+              ) : (
+                <div style={{ width: '100%' }}>
+                  <div className="admin-users-panel admin-users-panel--lg">
+                    {users.length === 0 ? (
+                      <div className="empty-state">אין משתמשים להצגה.</div>
+                    ) : (
+                      <div className="users-table-wrap">
+                        <table className="users-table users-table--lg">
+                          <thead>
+                            <tr>
+                              <th className="col-id">ID</th>
+                              <th className="col-username">Username</th>
+                              <th className="col-email">Email</th>
+                              <th className="col-phone">Phone</th>
+                              <th className="col-role">Role</th>
+                              <th className="col-trash"></th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {(usersEditMode ? editableUsers : users).map(u => (
+                              <tr key={u.id}>
+                                <td className="col-id">{u.id}</td>
+                                <td className="col-username">{u.username}</td>
+                                <td className="col-email">{u.email || ''}</td>
+                                <td className="col-phone">{u.phone || ''}</td>
+                                <td className="col-role">
+                                  <select
+                                    value={Number(usersEditMode ? u.role : u.role) || 2}
+                                    onChange={(e) => updateEditableUserField(u.id, 'role', Number(e.target.value))}
+                                    disabled={!usersEditMode}
+                                  >
+                                    <option value={1}>1 (Admin)</option>
+                                    <option value={2}>2 (Viewer)</option>
+                                  </select>
+                                </td>
+                                <td className="col-trash">
+                                  <button
+                                    className="trash-icon-btn red"
+                                    title="מחיקת משתמש"
+                                    onClick={() => deleteUser(u.id)}
+                                  >
+                                    🗑
+                                  </button>
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className={`users-cta-row users-cta-row--compact ${usersEditMode ? 'editing' : ''}`}>
+                    <button
+                      className="btn-hero btn-primary btn-hero--users"
+                      onClick={loadUsers}
+                      disabled={loadingUsers}
+                    >
+                      {loadingUsers ? 'טוען...' : 'רענן'}
+                    </button>
+
+                    {!usersEditMode ? (
+                      <>
+                        <button
+                          className="btn-hero btn-primary btn-hero--users"
+                          onClick={enterUsersEdit}
+                          disabled={loadingUsers || users.length === 0}
+                        >
+                          עריכה
+                        </button>
+                        <button
+                          className="btn back-btn btn-hero--users"
+                          onClick={() => {
+                            setUsersEditMode(false);
+                            setEditableUsers([]);
+                            setShowUsersPanel(false);
+                          }}
+                        >
+                          חזרה
+                        </button>
+                      </>
+                    ) : (
+                      <>
+                        <button
+                          className="btn-hero btn-primary btn-hero--users"
+                          onClick={saveAllUsers}
+                          disabled={savingUsers}
+                        >
+                          {savingUsers ? 'שומר...' : 'שמור'}
+                        </button>
+                        <button
+                          className="btn-hero btn-primary btn-hero--users"
+                          onClick={cancelUsersEdit}
+                          disabled={savingUsers}
+                        >
+                          בטל
+                        </button>
+                        <button
+                          className="btn back-btn btn-hero--users"
+                          onClick={() => {
+                            setUsersEditMode(false);
+                            setEditableUsers([]);
+                            setShowUsersPanel(false);
+                          }}
+                        >
+                          חזרה
+                        </button>
+                      </>
+                    )}
+                  </div>
+                </div>
               )}
             </div>
-
-            {/* פאנל משתמשים */}
-            {isAdmin && showUsersPanel && (
-              <div className="admin-users-panel" style={{ marginTop: 16 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-                  <h3 style={{ margin: 0 }}>משתמשים</h3>
-                  <button onClick={loadUsers} disabled={loadingUsers}>
-                    {loadingUsers ? 'טוען...' : 'רענן'}
-                  </button>
-
-                  {!usersEditMode ? (
-                    <button onClick={enterUsersEdit} disabled={loadingUsers || users.length === 0}>
-                      עריכה
-                    </button>
-                  ) : (
-                    <>
-                      <button onClick={saveAllUsers} disabled={savingUsers}>
-                        {savingUsers ? 'שומר...' : 'שמור'}
-                      </button>
-                      <button onClick={cancelUsersEdit} disabled={savingUsers}>
-                        בטל
-                      </button>
-                    </>
-                  )}
-                </div>
-
-                {users.length === 0 ? (
-                  <div className="empty-state">אין משתמשים להצגה.</div>
-                ) : (
-                  <div className="users-table-wrap" style={{ overflowX: 'auto' }}>
-                    <table className="users-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
-                      <thead>
-                        <tr>
-                          <th style={{ textAlign: 'start' }}>ID</th>
-                          <th style={{ textAlign: 'start' }}>Username</th>
-                          <th style={{ textAlign: 'start' }}>Email</th>
-                          <th style={{ textAlign: 'start' }}>Phone</th>
-                          <th style={{ textAlign: 'start' }}>Role</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {(usersEditMode ? editableUsers : users).map(u => (
-                          <tr key={u.id}>
-                            <td>{u.id}</td>
-                            <td>{u.username}</td>
-                            <td>
-                              <input
-                                type="email"
-                                value={(usersEditMode ? u.email : u.email) || ''}
-                                onChange={(e) => updateEditableUserField(u.id, 'email', e.target.value)}
-                                style={{ width: '100%' }}
-                                disabled={!usersEditMode}
-                              />
-                            </td>
-                            <td>
-                              <input
-                                type="tel"
-                                value={(usersEditMode ? u.phone : u.phone) || ''}
-                                onChange={(e) => updateEditableUserField(u.id, 'phone', e.target.value)}
-                                style={{ width: '100%' }}
-                                disabled={!usersEditMode}
-                              />
-                            </td>
-                            <td>
-                              <select
-                                value={Number(usersEditMode ? u.role : u.role) || 2}
-                                onChange={(e) => updateEditableUserField(u.id, 'role', Number(e.target.value))}
-                                disabled={!usersEditMode}
-                              >
-                                <option value={1}>1 (Admin)</option>
-                                <option value={2}>2 (Viewer)</option>
-                              </select>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                )}
-              </div>
-            )}
           </div>
         </section>
       )}
 
-      {/* טופס הוספת אזור חדש */}
       {showForm && (
         <div className="form-container">
           <h2 className="form-title">הוספת איזור</h2>
