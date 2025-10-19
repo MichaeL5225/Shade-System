@@ -1,4 +1,4 @@
-/* ================== בסיס עמוד / פריסה כללית ================== */
+/* ================== Page base / global layout ================== */
 html, body {
   height: 100%;
   margin: 0;
@@ -27,7 +27,7 @@ body {
   pointer-events: none;
 }
 
-/* ================== Hero (דף הבית) ================== */
+/* ================== Hero (home screen container) ================== */
 .hero {
   width: 100%;
   display: flex;
@@ -78,7 +78,7 @@ body {
   margin: 24px 0;
 }
 
-/* ================== כפתורים כלליים ================== */
+/* ================== Generic buttons ================== */
 .btn-hero {
   min-width: 220px;
   height: 56px;
@@ -133,11 +133,11 @@ body {
   border: 1px solid #e2e8f0;
 }
 
-/* כפתור מחיקה */
+/* Delete button */
 .btn.delete { background: #fee2e2; color: #991b1b; border:1px solid #fecaca; }
 .btn.delete:hover { background: #ef4444; color: #fff; border-color: #ef4444; }
 
-/* ================== פס "ברוך הבא" ================== */
+/* ================== “Welcome” floating strip ================== */
 .welcome-strip {
   position: fixed;
   top: 20px;
@@ -153,7 +153,7 @@ body {
 }
 .welcome-inner { font-weight: 900; font-size: 28px; color: #0f172a; }
 
-/* ================== רשימת אזורים ================== */
+/* ================== Areas list ================== */
 .hero-card .areas-panel{
   --area-row-h: 64px;
   --search-block-h: 88px;
@@ -238,7 +238,7 @@ body {
   padding: 12px 0;
 }
 
-/* ================== טופס הוספת אזור ================== */
+/* ================== Add-area form ================== */
 .form-container {
   width: min(64vw, 560px);
   max-height: calc(100dvh - 40px);
@@ -326,7 +326,7 @@ body {
   border: 0 !important;
 }
 
-/* ================== לוח משתמשים (אדמין) ================== */
+/* ================== Users board (admin) ================== */
 .admin-users-panel {
   max-height: 300px;
   overflow-y: auto;
@@ -352,7 +352,7 @@ body {
   text-align: center;
 }
 
-/* גרסת דסקטופ משודרגת */
+/* Desktop-enhanced users board */
 .admin-users-panel--lg{
   width: 94%;
   max-width: 1160px;
@@ -396,7 +396,7 @@ body {
   border-radius: 10px;
 }
 
-/* עיטוף הטבלה כדי לשלוט בכמות שורות נראות */
+/* Wrapper controlling visible rows count */
 .users-table-wrap{
   --rowH: 68px;
   --headH: 62px;
@@ -413,7 +413,7 @@ body {
   z-index: 1;
 }
 
-/* פעולות מתחת לטבלה */
+/* Actions under the table */
 .users-cta-row{
   display: flex;
   justify-content: center;
@@ -435,7 +435,7 @@ body {
   justify-content: flex-start;
 }
 
-/* מצב Users על גבי כרטיס */
+/* Users mode wrapped inside hero card */
 .hero-card.users-mode{ 
   gap: 0; 
   width: min(86vw, 1200px);
@@ -444,7 +444,7 @@ body {
   padding-block-end: 50px !important; 
 }
 
-/* כפתור מחיקת אזור/משתמש */
+/* Area/user delete icon button */
 .trash-icon-btn{
   width: 36px;
   height: 36px;
@@ -463,11 +463,11 @@ body {
 .trash-icon-btn:hover{ background: #fee2e2; border-color: #fecaca; color: #b91c1c; }
 .trash-icon-btn:active{ transform: translateY(1px); }
 
-/* טיפוגרפיה */
+/* Typography */
 .areas-panel .area-item a,
 .areas-panel .area-item span { font-family: 'Assistant', sans-serif; font-weight: 700; }
 
-/* התאמות כפתורי הירו בסיס */
+/* Base hero-button tweaks */
 .btn-hero,
 .btn-hero.btn-primary {
   font-size: 14px;
@@ -475,15 +475,15 @@ body {
   padding: 6px 0;
 }
 
-/* ריווח לכפתורים בתחתית */
+/* Extra spacing for bottom action row */
 .actions-row--bottom{ margin-top: 14px; }
 
-/* ===== טריק קטן: התמונה מקדימה, הטבלה מיד אחריה ===== */
+/* ===== Small trick: image first, table right after it ===== */
 .image-preview { display:block; margin: 0 auto 10px; }
 .image-preview + .admin-users-panel--lg,
 .image-preview + .users-table-wrap { margin-top: 8px !important; }
 
-/* ================== MOBILE (≤768px) — ברייקפוינט יחיד ================== */
+/* ================== MOBILE (≤768px) — single breakpoint ================== */
 @media (max-width: 768px) {
   html, body { height: 100dvh; overflow: hidden; }
 
@@ -500,7 +500,7 @@ body {
 
   .hero { padding: 0 !important; align-items: center; justify-content: center; height: 100dvh; min-height: 100dvh; }
 
-  /* כרטיס רגיל */
+  /* Regular hero card */
   .hero-card {
     width: min(88vw, 420px);
     max-width: 420px;
@@ -511,7 +511,7 @@ body {
   }
   .hero-title { font-size: 26px; margin: 0 0 8px; }
 
-  /* רשימת אזורים בכרטיס */
+  /* Areas list inside hero card */
   .hero-card .areas-panel{
     --area-row-h: 60px;
     --search-block-h: 80px;
@@ -535,7 +535,7 @@ body {
   .areas-panel .area-item a,
   .areas-panel .area-item span{ font-size: 16px; line-height: 1.4; }
 
-  /* טופס */
+  /* Form */
   .form-container{
     width: min(90vw, 420px);
     padding: 14px 16px;
@@ -554,7 +554,7 @@ body {
 
   .back-btn, .submit-btn{ height: 40px; min-width: 120px; font-size: 14px; }
 
-  /* מצב USERS במובייל */
+  /* Users mode on mobile */
   .hero-card.users-mode{ 
     position: static; 
     width: min(92vw, 420px) !important; 
@@ -565,7 +565,7 @@ body {
     border-radius: 18px !important; 
     box-shadow: 0 12px 36px rgba(0,0,0,.18); 
     background: rgba(255, 255, 255, 0.95); 
-    padding: 18px 14px 140px; /* מקום לכפתורים התחתונים */
+    padding: 18px 14px 140px; /* space for the fixed bottom action row */
     display: flex; 
     flex-direction: column; 
     gap: 10px; 
@@ -618,7 +618,7 @@ body {
   .hero-card.users-mode .users-table--lg th { font-size: 14px; }
   .hero-card.users-mode .users-table--lg thead th{ position: static !important; background: inherit; }
 
-  /* רוחבי עמודות במובייל */
+  /* Column widths on mobile */
   .hero-card.users-mode .users-table--lg .col-id{ width: 12%; text-align: center; }
   .hero-card.users-mode .users-table--lg .col-username{ width: 22%; }
   .hero-card.users-mode .users-table--lg .col-email{ width: 28%; }
@@ -628,7 +628,7 @@ body {
   .hero-card.users-mode .users-table--lg .col-role select{ width: 100%; height: 32px; font-size: 12px; }
   .hero-card.users-mode .users-table--lg .col-trash .trash-icon-btn{ width: 32px; height: 32px; font-size: 16px; }
 
-  /* כפתורי פעולה תחתונים — קבועים */
+  /* Bottom action row — fixed */
   .hero-card.users-mode .users-cta-row {
     position: fixed; 
     left: 0; right: 0; bottom: 0; width: 100%; 
@@ -651,7 +651,7 @@ body {
     border-radius: 12px;
   }
 
-  /* כפתורי הירו בכרטיס רגיל */
+  /* Hero card actions (non-users mode) on mobile */
   .hero-card:not(.users-mode) .actions-row, 
   .hero-card:not(.users-mode) .actions-row--bottom{
     display: flex; 

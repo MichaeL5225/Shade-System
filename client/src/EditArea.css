@@ -16,7 +16,7 @@ html, body { margin: 0; overflow-x: hidden; }
   width:100vw; max-width:100vw;
 }
 
-/* ===== פריסה כללית: מפה + פאנל ===== */
+/* ===== Layout: map + side panel ===== */
 .area-row{
   direction:ltr;
   display:grid;
@@ -37,7 +37,7 @@ html, body { margin: 0; overflow-x: hidden; }
   border:1px solid #e5e7eb; border-radius:8px;
 }
 
-/* ===== מרקרי הצללה ===== */
+/* ===== Shade markers ===== */
 .shade-marker{ position:absolute; display:inline-block; }
 .shade-delete{
   position:absolute; top:-10px; right:-10px;
@@ -54,7 +54,7 @@ html, body { margin: 0; overflow-x: hidden; }
 .shade-marker:hover .shade-percent,
 .shade-marker:focus-within .shade-percent{ display:block; }
 
-/* צורת ההצללה - ירח */
+/* Shade shape – crescent (moon) */
 .shade-dot{
   position:relative; overflow:hidden; width:100%; height:100%;
   border-radius:50%; box-sizing:border-box;
@@ -67,12 +67,12 @@ html, body { margin: 0; overflow-x: hidden; }
   border-radius:50%; background:#fff;
 }
 
-/* הדגשות קישוריות מפה<->טבלה */
+/* Map <-> table hover highlighting */
 .shade-marker.is-hovered{ outline:2px rgba(56,189,248,.5); outline-offset:1px; opacity:.8; }
 .shade-row.is-hovered{ background:#e0f2fe; }
 .shade-row.is-hovered .desc-cell, .shade-row.is-hovered .pct-cell{ color:#0284c7; font-weight:800; }
 
-/* ===== פאנל ימני ===== */
+/* ===== Right panel ===== */
 .shade-panel{
   grid-column:2/3; height:100%; box-sizing:border-box; direction:rtl;
   background:linear-gradient(180deg,#f8fafc 0%, #eef2f7 100%);
@@ -80,7 +80,7 @@ html, body { margin: 0; overflow-x: hidden; }
   display:flex; flex-direction:column; overflow:hidden; min-height:0;
 }
 
-/* מידע אזור + עריכה */
+/* Area info + edit */
 .panel-area-info{ margin-bottom:8px; }
 .panel-area-title{ margin:0; font-size:30px; font-weight:800; color:#0f172a; text-align:center; }
 .panel-area-desc{ margin:4px 0 12px; font-size:20px; color:#64748b; text-align:center; }
@@ -89,23 +89,23 @@ html, body { margin: 0; overflow-x: hidden; }
 .shade-input{ width:100%; padding:6px 8px; border:1px solid #e2e8f0; border-radius:8px; box-sizing:border-box; }
 .percent-input{ width:90px; padding:6px 8px; text-align:center; border:1px solid #e2e8f0; border-radius:8px; box-sizing:border-box; }
 
-/* ===== כפתורים ===== */
+/* ===== Buttons ===== */
 .button{
   background:linear-gradient(135deg,#ff7a00 0%, #ff3d71 100%);
   color:#fff; border:0; border-radius:12px; padding:8px 16px; font-size:16px;
   font-weight:800; cursor:pointer; transition:.2s ease; box-shadow:0 10px 24px rgba(0,0,0,.12);
 }
 .button:hover{ filter:brightness(1.05); transform:translateY(-1px); }
-.button-primary{}
 
-/* וריאציית hover בתוך הפאנל/טופס */
+
+/* Hover variant inside panel/form */
 .shade-panel .panel-actions .button:hover,
 .shade-panel .shade-form .button:hover{
   background:linear-gradient(135deg,#ffb26b 0%, #ff86b4 100%); color:#fff;
   filter:brightness(1.06); transform:translateY(-1px);
 }
 
-/* ===== כרטיס + טבלה ===== */
+/* ===== Card + table ===== */
 .panel-card{
   display:flex; flex-direction:column; gap:0;
   background:#fff; border-radius:16px; box-shadow:0 12px 28px rgba(2,6,23,.08);
@@ -148,7 +148,7 @@ html, body { margin: 0; overflow-x: hidden; }
 .pct-cell{ font-weight:800; }
 .empty-row{ text-align:center; color:#64748b; padding:16px 8px; }
 
-/* מחיקה */
+/* Deletion */
 .trash-red{ color:#ef4444; }
 .table-delete, .shade-delete{ color:#ef4444; }
 .table-delete{
@@ -160,7 +160,7 @@ html, body { margin: 0; overflow-x: hidden; }
 .table-delete:focus-visible{ outline:2px solid #0f62fe; outline-offset:2px; }
 .table-delete:disabled{ opacity:.45; cursor:not-allowed; }
 
-/* ===== טופס הוספת הצללה ===== */
+/* ===== Add-shade form ===== */
 .panel-sticky{ position:sticky; top:0; z-index:2; background:#fff; border-bottom:1px solid #e9eef5; }
 .shade-form{
   background:linear-gradient(180deg,#fff7f2 0%, #fff1ec 100%);
@@ -176,7 +176,7 @@ html, body { margin: 0; overflow-x: hidden; }
 .shade-form button:nth-last-of-type(2){ grid-column:1; }
 .shade-form button:last-of-type{ grid-column:2; }
 
-/* ===== כפתור חזרה קבוע ===== */
+/* ===== Fixed “Back” button ===== */
 .panel-footer{
   position:fixed; right:24px; bottom:max(16px, env(safe-area-inset-bottom));
   z-index:20; display:flex; justify-content:flex-end; pointer-events:auto;
@@ -189,7 +189,7 @@ html, body { margin: 0; overflow-x: hidden; }
   color:#fff; filter:brightness(1.06); transform:translateY(-1px);
 }
 
-/* ===== מצב מובייל  ===== */
+/* ===== Mobile mode ===== */
 @media (orientation:portrait) and (max-width:1100px){
   html, body{ overflow-y:auto !important; }
   .area-row{ display:block !important; height:auto; min-height:100dvh; }
@@ -242,7 +242,7 @@ html, body { margin: 0; overflow-x: hidden; }
   .panel-footer .button{ min-width:118px; height:36px; font-size:14px; padding:0 14px; }
 }
 
-/* ===== LANDSCAPE – מסכים נמוכים ===== */
+/* ===== LANDSCAPE – short screens ===== */
 @media (orientation:landscape) and (max-height:560px) and (min-height:520px){
   html, body, .App, .edit-area{ height:auto !important; min-height:100dvh; overflow-y:auto !important; }
   .area-row{ display:block !important; height:auto; min-height:100dvh; }
@@ -292,3 +292,13 @@ html, body { margin: 0; overflow-x: hidden; }
   .panel-footer{ position:sticky; right:8px; bottom:max(8px, env(safe-area-inset-bottom)); }
   .panel-footer .button{ min-width:84px; height:30px; font-size:12px; padding:0 10px; border-radius:10px; }
 }
+/* Force side-by-side layout even on short landscape screens */
+@media (orientation:landscape) and (max-height:560px) {
+  .area-row{
+    display: grid !important;
+    grid-template-columns: minmax(0,70%) minmax(0,30%);
+  }
+  .map-wrap{ height:100vh; margin-top:0; }
+  .panel-footer{ position: fixed; }
+}
+

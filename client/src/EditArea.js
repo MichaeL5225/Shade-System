@@ -3,13 +3,16 @@ import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
 import "./EditArea.css";
 
-// ================== קבוע חשוב לתיקון הבעיה ==================
-// גודל תצוגה קבוע (בפיקסלים של המסך) להצללה חדשה בזמן "הוספה"
-// ממנו נגזור פעם אחת את הרוחב/גובה ב-natural px ביחס לתמונת המפה המוצגת.
-// כך אין הצטברות/תפיחה בלחיצות/צביטות חוזרות.
+/**
+ * ================== Important constant ==================
+ * Fixed on-screen (CSS pixels) size for a newly added shade marker.
+ * From this display size we derive the natural image width/height once,
+ * relative to the currently rendered map image.
+ * This prevents cumulative scaling/drift after repeated zoom/resize interactions.
+ */
 const ADD_DISPLAY_SIZE = 30;
 
-// אייקון פח למחיקה
+/** Trash (delete) icon */
 const TrashIcon = ({ size = 16 }) => (
   <svg
     width={size}
@@ -25,7 +28,7 @@ const TrashIcon = ({ size = 16 }) => (
 function EditArea() {
   const { name } = useParams();
 
-  // RBAC — נקרא את ה-role מה-localStorage ונחשב isAdmin
+  // RBAC — read role from localStorage and compute isAdmin
   const role = Number(localStorage.getItem("shade_role") || 2); // RBAC
   const isAdmin = role === 1; // RBAC
 
@@ -41,9 +44,9 @@ function EditArea() {
   const [newShade, setNewShade] = useState({
     percentage: "",
     description: "",
-    x: null,      // natural
-    y: null,      // natural
-    width: null,  // natural — נשמר כ-natural בלבד; נגזר בפעם הראשונה מהתצוגה
+    x: null,      // natural image coordinate
+    y: null,      // natural image coordinate
+    width: null,  // natural — stored only in natural units; derived once from display size
     height: null, // natural
   });
   const [hoveredId, setHoveredId] = useState(null);
@@ -57,7 +60,7 @@ function EditArea() {
 
   const imgRef = useRef(null);
 
-  // מדדי תמונה מוצגת לעומת גודל טבעי (לתרגום קואורדינטות)
+  // Displayed image metrics vs natural size (for coordinate transforms)
   const [imgMetrics, setImgMetrics] = useState({
     naturalW: 0,
     naturalH: 0,
@@ -67,7 +70,7 @@ function EditArea() {
     offsetY: 0,
   });
 
-  // עדכון מדדים מתוך DOM
+  // Update metrics from the DOM
   const updateImageMetrics = () => {
     const img = imgRef.current;
     const map = mapRef.current;
@@ -86,7 +89,7 @@ function EditArea() {
     });
   };
 
-  // המרת קואורדינטות טבעיות למרחב התצוגה
+  // Convert natural coordinates to display (CSS pixels)
   const project = (natX, natY, natW, natH) => {
     const { naturalW, naturalH, clientW, clientH, offsetX, offsetY } =
       imgMetrics;
@@ -103,20 +106,20 @@ function EditArea() {
     };
   };
 
-  // טעינת נתוני אזור + הצללות מהשרת
+  // Load area data + shades from the server
   useEffect(() => {
     axios
       .get(`/api/areas/name/${encodeURIComponent(name)}`)
       .then((res) => setAreaData(res.data))
-      .catch((err) => console.error("שגיאה בטעינת אזור:", err));
+      .catch((err) => console.error("Failed to load area:", err));
 
     axios
       .get(`/api/shades/${encodeURIComponent(name)}`)
       .then((res) => setShades(res.data))
-      .catch((err) => console.error("שגיאה בטעינת הצללות:", err));
+      .catch((err) => console.error("Failed to load shades:", err));
   }, [name]);
 
-  // מעקב אחרי שינויי גודל תמונה לצורך חישובי מיקום מדוייקים
+  // Watch image size changes to keep precise positioning
   useEffect(() => {
     const img = imgRef.current;
     if (!img) return;
@@ -129,22 +132,22 @@ function EditArea() {
     return () => ro.disconnect();
   }, [areaData.path]);
 
-  // החלפת מצב "הוספת הצללה" ואיפוס טופס ההוספה
+  // Toggle “add shade” mode and reset add form
   const handleToggleAdd = () => {
-    if (!isAdmin) return alert("אין הרשאה להוסיף הצללה"); // RBAC
+    if (!isAdmin) return alert("אין הרשאה להוסיף הצללה"); // “No permission to add shade”
     setIsAdding((prev) => !prev);
-    // איפוס ערכי natural כדי שבקליק הבא נגזור אותם מגודל התצוגה הקבוע (ADD_DISPLAY_SIZE)
+    // Reset natural values — next click will derive them once from ADD_DISPLAY_SIZE
     setNewShade({
       percentage: "",
       description: "",
       x: null,
       y: null,
-      width: null,   // natural יחושב על סמך ADD_DISPLAY_SIZE בפעם הראשונה
+      width: null,   // natural (derived from ADD_DISPLAY_SIZE on first placement)
       height: null,  // natural
     });
   };
 
-  // קליק על המפה: חישוב נקודת ההנחה ביחס לתמונה המוצגת + המרה לטבעי
+  // Click on the map: compute placement in image space and convert to natural coords
   const handleMapClick = (e) => {
     if (!isAdmin) return; // RBAC
     if (!isAdding || !mapRef.current || !imgRef.current) return;
@@ -155,8 +158,8 @@ function EditArea() {
     const clickXInImg = e.clientX - imgRect.left;
     const clickYInImg = e.clientY - imgRect.top;
 
-    // אם יש כבר רוחב/גובה טבעיים שהוזנו ידנית, נשמור עליהם;
-    // אחרת נגזור אותם *פעם אחת* מגודל תצוגה קבוע (ADD_DISPLAY_SIZE)
+    // If natural width/height already provided by user keep them;
+    // otherwise derive once from the fixed display size (ADD_DISPLAY_SIZE)
     const scaleX = imgRect.width > 0 ? img.naturalWidth / imgRect.width : 1;
     const scaleY = imgRect.height > 0 ? img.naturalHeight / imgRect.height : 1;
 
@@ -170,7 +173,7 @@ function EditArea() {
         ? Math.round(newShade.height)
         : Math.round(ADD_DISPLAY_SIZE * scaleY);
 
-    // מגבילים את נקודת ההנחה כך שהסימון לא יגלוש מהתמונה
+    // Keep marker fully inside the image
     const maxX = imgRect.width - natW / scaleX;
     const maxY = imgRect.height - natH / scaleY;
 
@@ -180,19 +183,18 @@ function EditArea() {
     const natX = Math.round(xWithinImg * scaleX);
     const natY = Math.round(yWithinImg * scaleY);
 
-    // שימי לב: כאן אנחנו *לא* משתמשים ב-newShade.width/height שנגזרו קודם בתור תצוגה.
-    // במקום זה, שומרים ישירות את ה-natural (natW/natH) — ללא כפל חוזר.
+    // Important: store natural width/height directly (no repeated scaling)
     setNewShade((prev) => ({
       ...prev,
       x: natX,
       y: natY,
-      width: natW,   // נשמר natural
-      height: natH,  // נשמר natural
+      width: natW,   // natural
+      height: natH,  // natural
     }));
   };
 
   const startEdit = () => {
-    if (!isAdmin) return alert("אין הרשאה לעריכת אזור"); // RBAC
+    if (!isAdmin) return alert("אין הרשאה לעריכת אזור"); // “No permission to edit area”
     setEditMode(true);
     setEditableShades(shades.map((s) => ({ ...s })));
   };
@@ -202,12 +204,12 @@ function EditArea() {
     setEditableShades([]);
   };
 
-  // עדכון שדות האזור בטופס העריכה
+  // Update area fields in edit mode
   const handleAreaField = (key, value) => {
     setAreaData((prev) => ({ ...prev, [key]: value }));
   };
 
-  // עדכון שדה בהצללה מסויימת בטבלת העריכה
+  // Update a specific shade field in the edit table
   const handleShadeField = (idx, key, value) => {
     setEditableShades((prev) => {
       const next = [...prev];
@@ -220,9 +222,9 @@ function EditArea() {
     });
   };
 
-  // שמירת עריכה 
+  // Save edits (area + modified shades)
   const saveEdit = async () => {
-    if (!isAdmin) return alert("אין הרשאה לשמור שינויים"); // RBAC
+    if (!isAdmin) return alert("אין הרשאה לשמור שינויים"); // “No permission to save”
     try {
       const areaPayload = {
         name: areaData.name,
@@ -233,6 +235,7 @@ function EditArea() {
         areaPayload
       );
 
+      // Apply only changed shade fields
       const byId = new Map(shades.map((s, i) => [getId(s, i), s]));
       for (let i = 0; i < editableShades.length; i++) {
         const cur = editableShades[i];
@@ -251,6 +254,7 @@ function EditArea() {
         }
       }
 
+      // Refresh from server after save
       const updatedArea = await axios.get(
         `/api/areas/name/${encodeURIComponent(areaData.name)}`
       );
@@ -261,17 +265,17 @@ function EditArea() {
       setShades(updatedShades.data);
       setEditMode(false);
     } catch (err) {
-      console.error("שגיאה בשמירת עריכה:", err);
+      console.error("Save edit failed:", err);
       alert("❌ שמירה נכשלה");
     }
   };
 
-  // הוספת הצללה חדשה
+  // Add a new shade
   const handleSaveShade = async () => {
     if (!isAdmin) return alert("אין הרשאה להוסיף הצללה"); // RBAC
     const { percentage, description, x, y, width, height } = newShade;
     if (!percentage || !description || x === null || y === null) {
-      return alert("מלא את כל השדות לפני שמירה");
+      return alert("מלא את כל השדות לפני שמירה"); // “Fill all fields before saving”
     }
 
     try {
@@ -284,7 +288,7 @@ function EditArea() {
         width,
         height,
       });
-      alert("✔️ הצללה נשמרה בהצלחה");
+      alert("✔️ הצללה נשמרה בהצלחה"); // “Saved successfully”
       setIsAdding(false);
 
       const updated = await axios.get(
@@ -292,24 +296,24 @@ function EditArea() {
       );
       setShades(updated.data);
     } catch (err) {
-      console.error("שגיאה בשמירת הצללה:", err);
+      console.error("Saving shade failed:", err);
       alert("❌ שגיאה בשמירה");
     }
   };
 
-  // מחיקת הצללה
+  // Delete a shade
   const handleDeleteShade = async (idLike) => {
     if (!isAdmin) return alert("אין הרשאה למחיקה"); // RBAC
-    const id = idLike?.id ?? idLike?.ID ?? idLike; // be tolerant to API field names
-    if (!id) return alert("אין מזהה להצללה למחיקה");
+    const id = idLike?.id ?? idLike?.ID ?? idLike; // tolerate different API field names
+    if (!id) return alert("אין מזהה להצללה למחיקה"); // “Missing id”
 
-    if (!window.confirm("למחוק את ההצללה?")) return;
+    if (!window.confirm("למחוק את ההצללה?")) return; // “Delete this shade?”
 
     try {
       await axios.delete(`/api/shades/${id}`);
       setShades((prev) => prev.filter((s) => (s.id ?? s.ID) !== id));
     } catch (err) {
-      console.error("שגיאה במחיקה:", err);
+      console.error("Delete shade failed:", err);
       alert("❌ שגיאה במחיקת הצללה");
     }
   };
@@ -320,6 +324,7 @@ function EditArea() {
     return Number.isInteger(n) ? `${n}%` : `${n.toFixed(1)}%`;
   };
 
+  // Compute badge popup style based on marker size
   const getBadgeStyle = (w, h) => {
     const minDim = Math.max(1, Math.min(Number(w) || 0, Number(h) || 0));
     const font = Math.round(Math.max(12, Math.min(28, minDim * 0.22)));
@@ -346,7 +351,7 @@ function EditArea() {
   return (
     <div className="edit-area">
       <div className="area-row">
-        {/* מפת האזור עם שכבת ההצללות */}
+        {/* Area map with shade overlay */}
         <div className="map-wrap">
           <div className="map" ref={mapRef} onClick={handleMapClick}>
             {areaData.path ? (
@@ -396,7 +401,7 @@ function EditArea() {
                     const pct = Math.max(0, Math.min(100, Number(raw) || 0));
                     return <div className="shade-dot" style={{ "--pct": pct }} />;
                   })()}
-                  {/* כפתור מחיקה — רק לאדמין */}
+                  {/* Delete button — admin only */}
                   {isAdmin && (
                     <button
                       className="shade-delete"
@@ -416,7 +421,7 @@ function EditArea() {
               );
             })}
 
-            {/* תצוגה של הצללה חדשה (במצב הוספה) — רק לאדמין */}
+            {/* Preview of the new shade while adding — admin only */}
             {isAdmin &&
               isAdding &&
               newShade.x != null &&
@@ -456,9 +461,9 @@ function EditArea() {
           </div>
         </div>
 
-        {/* פאנל ימני: פרטי אזור, פעולות, טופס הוספה וטבלת הצללות */}
+        {/* Right panel: area details, actions, add form, and shades table */}
         <aside className="shade-panel" aria-label="טבלת הצללות">
-          {/* פרטי אזור + מצב עריכה */}
+          {/* Area details + edit mode */}
           {editMode ? (
             <>
               <label className="field-label">שם האזור</label>
@@ -498,7 +503,7 @@ function EditArea() {
             </>
           )}
 
-          {/* טופס הוספת הצללה בתוך הפאנל — רק לאדמין */}
+          {/* Add-shade form in the panel — admin only */}
           {isAdmin && isAdding && (
             <div className="panel-sticky">
               <div className="shade-form">
@@ -655,7 +660,7 @@ function EditArea() {
             </div>
           </div>
 
-          {/* כפתור חזרה – מתחת לטבלה */}
+          {/* Back button — below the table */}
           <div className="panel-footer">
             <button className="button" onClick={handleBack}> חזרה </button>
           </div>

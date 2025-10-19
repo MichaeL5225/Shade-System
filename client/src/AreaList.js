@@ -3,25 +3,42 @@ import axios from 'axios';
 import { Link } from 'react-router-dom';
 import './AreaList.css';
 
+/**
+ * Global Axios base URL for API calls in development.
+ * In production you may prefer setting this once at app bootstrap,
+ * or relying on a reverse proxy instead of hardcoding.
+ */
 axios.defaults.baseURL = 'http://localhost:5000';
 
 function AreaList() {
+  /* =========================
+   * Auth / user identity
+   * ========================= */
   const [username, setUsername] = useState('');
+
+  /* =========================
+   * Areas (list, create, delete)
+   * ========================= */
   const [areas, setAreas] = useState([]);
   const [showForm, setShowForm] = useState(false);
   const [deleteMode, setDeleteMode] = useState(false);
   const [selectedAreas, setSelectedAreas] = useState([]);
   const [newArea, setNewArea] = useState({ name: '', description: '' });
-  const [pathFile, setPathFile] = useState(null);
+  const [pathFile, setPathFile] = useState(null);     // image file for the new area
   const [searchTerm, setSearchTerm] = useState('');
-  const [preview, setPreview] = useState(null);
+  const [preview, setPreview] = useState(null);       // local preview URL for the uploaded image
   const fileInputRef = useRef(null);
 
-  // ===== RBAC =====
+  /* =========================
+   * RBAC
+   * role: 1 = admin, 2 = viewer
+   * ========================= */
   const role = Number(localStorage.getItem('shade_role') || 2);
   const isAdmin = role === 1;
 
-  // ===== USERS PANEL (מצבים) =====
+  /* =========================
+   * Users panel (admin-only)
+   * ========================= */
   const [showUsersPanel, setShowUsersPanel] = useState(false);
   const [users, setUsers] = useState([]);
   const [editableUsers, setEditableUsers] = useState([]);
@@ -29,39 +46,44 @@ function AreaList() {
   const [loadingUsers, setLoadingUsers] = useState(false);
   const [savingUsers, setSavingUsers] = useState(false);
 
+  /* Load username from localStorage on mount */
   useEffect(() => {
     setUsername(localStorage.getItem('shade_username') || '');
   }, []);
 
+  /* Initial fetch of areas on mount */
   useEffect(() => {
     axios.get('/api/areas')
       .then(res => setAreas(res.data))
-      .catch(err => console.error('שגיאה בקבלת אזורים:', err));
+      .catch(err => console.error('Failed to fetch areas:', err));
   }, []);
 
+  /* Cleanup: revoke object URL when preview changes/unmounts */
   useEffect(() => {
     return () => { if (preview) URL.revokeObjectURL(preview); };
   }, [preview]);
 
+  /* ========== UI actions: areas ========== */
   const toggleForm = () => {
-    if (!isAdmin) { alert('אין הרשאה להוסיף אזור'); return; }
+    if (!isAdmin) { alert('אין הרשאה להוסיף אזור'); return; } // “No permission to add area”
     setShowForm(!showForm);
   };
 
   const handleAddArea = () => {
-    if (!isAdmin) { alert('אין הרשאה לבצע פעולה זו'); return; }
+    if (!isAdmin) { alert('אין הרשאה לבצע פעולה זו'); return; } // “No permission”
     const { name, description } = newArea;
     if (!name || !description || !pathFile)
-      return alert('חובה למלא את כל השדות ולהעלות תמונה');
+      return alert('חובה למלא את כל השדות ולהעלות תמונה'); // “All fields + image are required”
 
+    // Build multipart form for image upload
     const formData = new FormData();
     formData.append('name', name);
     formData.append('description', description);
-    formData.append('path', pathFile);
+    formData.append('path', pathFile); // backend expects `path` as the file field
 
     axios.post('/api/areas/upload', formData)
       .then(res => {
-        setAreas([...areas, res.data]);
+        setAreas([...areas, res.data]);          // append the new area returned from server
         setNewArea({ name: '', description: '' });
         setPathFile(null);
         if (preview) URL.revokeObjectURL(preview);
@@ -70,13 +92,13 @@ function AreaList() {
       })
       .catch(err => {
         const msg = err.response?.data?.error || err.message;
-        console.error('שגיאה בשליחה:', msg);
-        alert(`שגיאה בשמירה: ${msg}`);
+        console.error('Upload failed:', msg);
+        alert(`שגיאה בשמירה: ${msg}`); // “Save error”
       });
   };
 
   const handleDeleteSelected = () => {
-    if (!isAdmin) { alert('אין הרשאה למחיקה'); return; }
+    if (!isAdmin) { alert('אין הרשאה למחיקה'); return; } // “No permission to delete”
     Promise.all(
       selectedAreas.map(name =>
         axios.delete(`/api/areas/name/${encodeURIComponent(name)}`)
@@ -87,26 +109,28 @@ function AreaList() {
         setSelectedAreas([]);
         setDeleteMode(false);
       })
-      .catch(err => console.error('שגיאה במחיקה:', err));
+      .catch(err => console.error('Bulk delete failed:', err));
   };
 
   const handleDeleteSingle = async (name) => {
     if (!isAdmin) { alert('אין הרשאה למחיקה'); return; }
-    const ok = window.confirm(`האם את/ה בטוח/ה שברצונך למחוק את האזור "${name}"?`);
+    const ok = window.confirm(`Delete area "${name}"?`);
     if (!ok) return;
     try {
       await axios.delete(`/api/areas/name/${encodeURIComponent(name)}`);
       setAreas(prev => prev.filter(a => a.name !== name));
     } catch (err) {
-      console.error('שגיאה במחיקה:', err);
-      alert('מחיקה נכשלה. נסה/י שוב.');
+      console.error('Delete failed:', err);
+      alert('מחיקה נכשלה. נסה/י שוב.'); // “Deletion failed. Try again.”
     }
   };
 
+  /* Filter areas by search term (case-insensitive) */
   const filteredAreas = areas.filter(area =>
     area.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  /* Handle local file selection + preview URL */
   const handleFileChange = (e) => {
     const file = e.target.files?.[0] || null;
     if (preview) {
@@ -117,6 +141,7 @@ function AreaList() {
     if (file) setPreview(URL.createObjectURL(file));
   };
 
+  /* ========== Users admin panel ========== */
   const loadUsers = async () => {
     if (!isAdmin) return;
     try {
@@ -161,6 +186,7 @@ function AreaList() {
     try {
       setSavingUsers(true);
 
+      // Prepare only changed fields to minimize requests/payload
       const updates = [];
       for (let i = 0; i < editableUsers.length; i++) {
         const cur = editableUsers[i];
@@ -173,7 +199,7 @@ function AreaList() {
       }
 
       if (updates.length === 0) {
-        alert('אין שינויים לשמירה');
+        alert('אין שינויים לשמירה'); // “Nothing to save”
         return;
       }
 
@@ -181,7 +207,7 @@ function AreaList() {
         await axios.put(`/api/users/${u.id}`, u.payload);
       }
 
-      alert('נשמר בהצלחה');
+      alert('נשמר בהצלחה'); // “Saved”
       setUsersEditMode(false);
       setEditableUsers([]);
       await loadUsers();
@@ -194,7 +220,7 @@ function AreaList() {
 
   const deleteUser = async (id) => {
     if (!isAdmin) return;
-    const ok = window.confirm('למחוק משתמש זה?');
+    const ok = window.confirm('למחוק משתמש זה?'); // “Delete this user?”
     if (!ok) return;
     try {
       await axios.delete(`/api/users/${id}`);
@@ -204,24 +230,28 @@ function AreaList() {
     }
   };
 
+  /* ========== Render ========== */
   return (
     <div
       className="App"
       style={{
+        // page background image (served from /public)
         backgroundImage: "url('/HIT.jpg')",
         backgroundSize: "cover",
         backgroundPosition: "center",
         minHeight: "100vh"
       }}
     >
+      {/* Compact welcome strip (hidden when users panel is open) */}
       {!(isAdmin && showUsersPanel) && (
         <div className="welcome-strip">
           <div className="welcome-inner">
             ברוך הבא{username ? `, ${username}` : ''}
           </div>
         </div>
-    )}
+      )}
 
+      {/* Main hero section (either areas list or users board) */}
       {!showForm && (
         <section className="hero">
           <div className={`hero-card${showUsersPanel ? ' users-mode' : ''}`}>
@@ -232,9 +262,11 @@ function AreaList() {
             )}
 
             <div className="hero-actions" style={{ width: '100%' }}>
+              {/* ===== Areas mode (default) ===== */}
               {!isAdmin || !showUsersPanel ? (
                 <>
                   <div className="areas-panel">
+                    {/* Search box */}
                     <input
                       type="text"
                       placeholder="חיפוש..."
@@ -243,6 +275,7 @@ function AreaList() {
                       className="search-bar"
                     />
 
+                    {/* Areas list / empty state */}
                     {filteredAreas.length === 0 ? (
                       <div className="empty-state">
                         {searchTerm ? "לא נמצאו אזורים" : "לא נוספו אזורים"}
@@ -250,10 +283,12 @@ function AreaList() {
                     ) : (
                       filteredAreas.map((area, index) => (
                         <div key={index} className="area-item">
+                          {/* Link to edit screen by area name */}
                           <Link to={`/edit/${encodeURIComponent(area.name)}`}>
                             <strong>{area.name}</strong>
                           </Link>
 
+                          {/* Per-area delete (admin only) */}
                           {isAdmin && (
                             <button
                               type="button"
@@ -269,6 +304,7 @@ function AreaList() {
                       ))
                     )}
 
+                    {/* Bulk delete footer (shown when deleteMode is active) */}
                     {isAdmin && deleteMode && selectedAreas.length > 0 && (
                       <div className="panel-actions">
                         <button className="btn delete small" onClick={handleDeleteSelected}>
@@ -278,6 +314,7 @@ function AreaList() {
                     )}
                   </div>
 
+                  {/* Bottom actions (admin) */}
                   {isAdmin && !showUsersPanel && (
                     <div className="actions-row actions-row--bottom" style={{ gap: 12, flexWrap: 'wrap' }}>
                       <button className="btn-hero btn-primary" onClick={toggleUsersPanel}>משתמשים</button>
@@ -286,6 +323,7 @@ function AreaList() {
                   )}
                 </>
               ) : (
+                /* ===== Users mode (admin) ===== */
                 <div style={{ width: '100%' }}>
                   <div className="admin-users-panel admin-users-panel--lg">
                     {users.length === 0 ? (
@@ -337,6 +375,7 @@ function AreaList() {
                     )}
                   </div>
 
+                  {/* Users panel bottom actions */}
                   <div className={`users-cta-row users-cta-row--compact ${usersEditMode ? 'editing' : ''}`}>
                     <button
                       className="btn-hero btn-primary btn-hero--users"
@@ -402,11 +441,13 @@ function AreaList() {
         </section>
       )}
 
+      {/* New-area form (modal-like section over the hero) */}
       {showForm && (
         <div className="form-container">
           <h2 className="form-title">הוספת איזור</h2>
 
           <div className="form-body">
+            {/* Name */}
             <input
               type="text"
               placeholder="שם האזור"
@@ -414,12 +455,16 @@ function AreaList() {
               onChange={(e) => setNewArea({ ...newArea, name: e.target.value })}
               disabled={!isAdmin}
             />
+
+            {/* Description */}
             <textarea
               placeholder="תיאור האזור"
               value={newArea.description}
               onChange={(e) => setNewArea({ ...newArea, description: e.target.value })}
               disabled={!isAdmin}
             />
+
+            {/* Image upload (with local preview) */}
             <input
               ref={fileInputRef}
               type="file"
@@ -428,6 +473,7 @@ function AreaList() {
               disabled={!isAdmin}
             />
 
+            {/* Remove selected image */}
             {isAdmin && pathFile && (
               <button
                 type="button"
@@ -445,10 +491,12 @@ function AreaList() {
             )}
           </div>
 
+          {/* Image preview */}
           {preview && (
             <img src={preview} alt="תצוגה מקדימה" className="image-preview" />
           )}
 
+          {/* Form footer */}
           <div className="form-actions">
             <button
               className="btn back-btn"

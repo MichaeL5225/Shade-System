@@ -1,43 +1,38 @@
 // App.js
+// Root client component: initializes axios auth header and defines app routes (React Router).
+
 import React, { useEffect } from "react";
 import axios from "axios";
-
-import {
-  BrowserRouter as Router,
-  Routes,
-  Route,
-} from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 
 import AreaList from "./AreaList";
 import EditArea from "./EditArea";
 import Login from "./Login";
 
 function App() {
-  // בעת עליית האפליקציה/רענון דף:
-  // 1) מרים את ה-token שנשמר בלוגין
-  // 2) קובע כותרת Authorization לכל בקשות axios הבאות
   useEffect(() => {
-    const t = localStorage.getItem("shade_token");
-    if (t) {
-      axios.defaults.headers.common.Authorization = `Bearer ${t}`;
+    // On app load: read JWT from localStorage and set/remove the global Authorization header.
+    const token = localStorage.getItem("shade_token");
+    if (token) {
+      axios.defaults.headers.common.Authorization = `Bearer ${token}`;
     } else {
       delete axios.defaults.headers.common.Authorization;
     }
 
-    // אם את עובדת מול שרת על פורט/דומיין קבועים—אפשר לקבוע baseURL פעם אחת:
+    // Optional: set a global API base URL if your server runs on a fixed address/port.
     // axios.defaults.baseURL = "http://localhost:5000";
   }, []);
 
   return (
     <Router>
       <Routes>
-        {/* דף התחברות ברירת המחדל */}
+        {/* Default route: login screen */}
         <Route path="/" element={<Login />} />
 
-        {/* דף ראשי – רשימת האזורים */}
+        {/* Main screen: areas list (shown after successful login) */}
         <Route path="/areaList" element={<AreaList />} />
 
-        {/* דף עריכה – טוען אזור לפי הפרמטר :name מה-URL */}
+        {/* Edit screen: loads a specific area by its :name URL param */}
         <Route path="/edit/:name" element={<EditArea />} />
       </Routes>
     </Router>
