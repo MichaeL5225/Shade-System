@@ -400,7 +400,7 @@ body {
 .users-table-wrap{
   --rowH: 68px;
   --headH: 62px;
-  height: calc(var(--rowH) * 6 + var(--headH));
+  height: calc(var(--rowH) * 4 + var(--headH)); /* was 5 → now 4 for extra breathing space */
   overflow-y: auto;
   overflow-x: hidden;
   scrollbar-width: thin;
@@ -439,9 +439,11 @@ body {
 .hero-card.users-mode{ 
   gap: 0; 
   width: min(86vw, 1200px);
-  padding: 28px 28px 140px;
+  padding: 24px 24px 110px;        /* ↓ slightly smaller bottom padding */
   border-radius: 18px;
-  padding-block-end: 50px !important; 
+  padding-block-end: 24px !important;
+  max-height: calc(100vh - 80px);  /* ↓ ensures visible background top/bottom */
+  margin: 24px auto;               /* ↓ ensures visible background around */
 }
 
 /* Area/user delete icon button */
@@ -479,9 +481,16 @@ body {
 .actions-row--bottom{ margin-top: 14px; }
 
 /* ===== Small trick: image first, table right after it ===== */
-.image-preview { display:block; margin: 0 auto 10px; }
-.image-preview + .admin-users-panel--lg,
-.image-preview + .users-table-wrap { margin-top: 8px !important; }
+/* Preview image: keep full image but render smaller (desktop) */
+.image-preview { 
+  display: block; 
+  margin: 0 auto 10px; 
+  max-width: min(100%, 360px);
+  max-height: 220px;
+  width: auto; 
+  height: auto; 
+  object-fit: contain;
+}
 
 /* ================== MOBILE (≤768px) — single breakpoint ================== */
 @media (max-width: 768px) {
